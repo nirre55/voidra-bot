@@ -1,4 +1,11 @@
 import ccxt
+import enum
+
+# Market Environment Enum
+class MarketEnvironment(enum.Enum):
+    SPOT = "SPOT"
+    FUTURES_LIVE = "FUTURES_LIVE"
+    FUTURES_TESTNET = "FUTURES_TESTNET"
 
 # Custom Exceptions
 class ApiKeyMissingError(ValueError): # Inherit from ValueError for semantic correctness
@@ -17,6 +24,16 @@ class AppLogicError(Exception):
     """Custom exception for other application logic errors."""
     pass
 
+# Order Specific Exceptions
+class OrderPlacementError(Exception): # General order error
+    pass
+
+class InsufficientFundsError(OrderPlacementError): # Specific type of order error
+    pass
+
+class InvalidOrderParamsError(ValueError): # For issues with parameters before sending to API
+    pass
+
 class BinanceLogic:
     def __init__(self):
         """
@@ -26,14 +43,14 @@ class BinanceLogic:
         """
         pass
 
-    def get_balance(self, api_key: str, secret_key: str, use_futures_testnet: bool = False) -> float:
+    def get_balance(self, api_key: str, secret_key: str, market_environment: MarketEnvironment) -> float:
         """
         Fetches the total USDT balance from Binance.
 
         Args:
             api_key: The Binance API key.
             secret_key: The Binance secret key.
-            use_futures_testnet: If True, uses Binance Futures Testnet. Defaults to False.
+            market_environment: The market environment (SPOT, FUTURES_LIVE, FUTURES_TESTNET).
 
         Returns:
             The total USDT balance as a float.
@@ -51,18 +68,18 @@ class BinanceLogic:
             exchange_config = {
                 'apiKey': api_key,
                 'secret': secret_key,
-                'options': {
-                    'adjustForTimeDifference': True,
-                }
+                'options': {'adjustForTimeDifference': True}
             }
-            if use_futures_testnet:
-                # For futures, 'defaultType': 'future' might be needed for some ccxt versions or specific endpoints
-                # and set_sandbox_mode(True) is crucial for testnet.
+
+            if market_environment == MarketEnvironment.FUTURES_LIVE:
                 exchange_config['options']['defaultType'] = 'future'
+            elif market_environment == MarketEnvironment.FUTURES_TESTNET:
+                exchange_config['options']['defaultType'] = 'future'
+            # For SPOT, 'defaultType' is usually not needed or defaults to 'spot'
 
             exchange = ccxt.binance(exchange_config)
 
-            if use_futures_testnet:
+            if market_environment == MarketEnvironment.FUTURES_TESTNET:
                 exchange.set_sandbox_mode(True)
 
             # Fetch the balance
@@ -89,40 +106,128 @@ class BinanceLogic:
             # print(f"Original exception: {type(e).__name__} - {e}") # For debugging
             raise AppLogicError(f"An unexpected error occurred in application logic: {str(e)}")
 
+    def place_order(self,
+                    api_key: str,
+                    secret_key: str,
+                    market_environment: MarketEnvironment,
+                    symbol: str,
+                    order_type: str, # e.g., 'LIMIT', 'MARKET'
+                    side: str,       # e.g., 'BUY', 'SELL'
+                    amount: float,
+                    price: float = None): # Price is optional, for MARKET orders
+        if not api_key or not secret_key:
+            raise ApiKeyMissingError("API Key and Secret Key are required.")
+        if not symbol:
+            raise InvalidOrderParamsError("Symbol is required.")
+        if order_type.upper() not in ["LIMIT", "MARKET"]:
+            raise InvalidOrderParamsError("Order type must be LIMIT or MARKET.")
+        if side.upper() not in ["BUY", "SELL"]:
+            raise InvalidOrderParamsError("Side must be BUY or SELL.")
+        if amount <= 0:
+            raise InvalidOrderParamsError("Amount must be positive.")
+        if order_type.upper() == "LIMIT" and (price is None or price <= 0):
+            raise InvalidOrderParamsError("Price must be positive for LIMIT orders.")
+
+        exchange_config = {
+            'apiKey': api_key,
+            'secret': secret_key,
+            'options': {'adjustForTimeDifference': True}
+        }
+
+        if market_environment == MarketEnvironment.FUTURES_LIVE:
+            exchange_config['options']['defaultType'] = 'future'
+        elif market_environment == MarketEnvironment.FUTURES_TESTNET:
+            exchange_config['options']['defaultType'] = 'future'
+        # For SPOT, no 'defaultType' change needed here for placing orders usually.
+
+        try:
+            exchange = ccxt.binance(exchange_config)
+            if market_environment == MarketEnvironment.FUTURES_TESTNET:
+                exchange.set_sandbox_mode(True)
+
+            # Prepare params for create_order
+            ccxt_order_type = order_type.lower()
+            ccxt_side = side.lower()
+
+            final_price = None
+            if order_type.upper() == "LIMIT":
+                final_price = price
+
+            # The 'params' argument can be used for non-standard parameters if needed.
+            order_response = exchange.create_order(symbol, ccxt_order_type, ccxt_side, amount, final_price, {})
+            return order_response # Return the full order response from CCXT
+
+        except ccxt.InsufficientFunds as e:
+            raise InsufficientFundsError(f"Insufficient funds: {str(e)}")
+        except ccxt.InvalidOrder as e: # Covers various order logical errors like invalid price, size etc.
+            raise InvalidOrderParamsError(f"Invalid order parameters for exchange: {str(e)}")
+        except ccxt.NetworkError as e:
+            raise CustomNetworkError(f"Network error during order placement: {str(e)}")
+        # Ensure ExchangeError is caught after more specific CCXT errors like InvalidOrder
+        except ccxt.ExchangeError as e:
+            raise OrderPlacementError(f"Binance API error during order placement: {str(e)}")
+        except InvalidOrderParamsError: # Re-raise if caught from our own validation (should not happen if logic is correct here)
+            raise
+        except Exception as e:
+            # Log original error e here in a real app
+            # print(f"Original exception: {type(e).__name__} - {e}") # For debugging
+            raise AppLogicError(f"An unexpected error occurred during order placement: {str(e)}")
+
+
 if __name__ == '__main__':
     # This section is for basic testing of the BinanceLogic class.
     # It will not run when the module is imported elsewhere.
     print("Testing BinanceLogic...")
     logic = BinanceLogic()
 
-    # Test case 1: Missing API keys
-    print("\nTest Case 1: Missing API Keys")
+    # Example usage for get_balance (replace with actual test keys for real test)
+    print("\nTest Case: Get Balance (SPOT - requires valid read-only keys)")
     try:
-        logic.get_balance("", "")
+        # balance = logic.get_balance("YOUR_API_KEY", "YOUR_SECRET_KEY", MarketEnvironment.SPOT)
+        # print(f"SPOT USDT Balance: {balance}")
+        logic.get_balance("", "", MarketEnvironment.SPOT) # Test ApiKeyMissingError
     except ApiKeyMissingError as e:
-        print(f"Caught expected error: {e}")
+        print(f"Caught expected error for get_balance: {e}")
     except Exception as e:
-        print(f"Caught unexpected error: {e}")
+        print(f"Error during get_balance test: {e}")
 
-    # Test case 2: Dummy API keys (will likely cause an ExchangeError)
-    # Replace with your actual (read-only) keys for a real test, but be cautious.
-    print("\nTest Case 2: Dummy API Keys (expecting CustomExchangeError or CustomNetworkError)")
-    dummy_api_key = "YOUR_DUMMY_API_KEY"
-    dummy_secret_key = "YOUR_DUMMY_SECRET_KEY"
-    try:
-        balance = logic.get_balance(dummy_api_key, dummy_secret_key)
-        print(f"USDT Balance: {balance}")
-    except ApiKeyMissingError as e:
-        print(f"Caught ApiKeyMissingError: {e}")
-    except CustomNetworkError as e:
-        print(f"Caught CustomNetworkError: {e}")
-    except CustomExchangeError as e:
-        print(f"Caught CustomExchangeError: {e}")
-    except AppLogicError as e:
-        print(f"Caught AppLogicError: {e}")
-    except Exception as e:
-        print(f"Caught unexpected error: {e}")
+    # Example usage for place_order (VERY CAREFUL WITH REAL KEYS - USE TESTNET)
+    print("\nTest Case: Place Order (FUTURES_TESTNET - requires valid Futures Testnet keys)")
+    # Ensure you have separate API keys for Binance Futures Testnet
+    # These keys are DIFFERENT from your live Binance keys.
+    # Get them from: https://testnet.binancefuture.com/
+    testnet_api_key = "YOUR_FUTURES_TESTNET_API_KEY"
+    testnet_secret_key = "YOUR_FUTURES_TESTNET_SECRET_KEY"
 
-    print("\nNote: For Test Case 2, ccxt might raise various errors depending on network and key validity.")
-    print("A common error for invalid keys is 'binance Account has insufficient balance for requested action.' or similar.")
-    print("If you have no internet, a NetworkError is expected.")
+    if testnet_api_key == "YOUR_FUTURES_TESTNET_API_KEY" or testnet_secret_key == "YOUR_FUTURES_TESTNET_SECRET_KEY":
+        print("Skipping place_order test as placeholder API keys are used.")
+        print("Replace with your actual Binance Futures Testnet API keys to run this test.")
+    else:
+        try:
+            # Example: Place a LIMIT BUY order on BTC/USDT futures testnet
+            # Symbol for futures might be 'BTCUSDT' (without '/') depending on CCXT/exchange
+            order_details = logic.place_order(
+                api_key=testnet_api_key,
+                secret_key=testnet_secret_key,
+                market_environment=MarketEnvironment.FUTURES_TESTNET,
+                symbol="BTC/USDT",  # Or "BTCUSDT" - check CCXT documentation for futures symbols
+                order_type="LIMIT",
+                side="BUY",
+                amount=0.001,      # Example amount (e.g., 0.001 BTC)
+                price=20000        # Example price (e.g., $20,000 for BTC)
+            )
+            print(f"Order placed successfully on Futures Testnet: {order_details}")
+        except ApiKeyMissingError as e:
+            print(f"ApiKeyMissingError for place_order: {e}")
+        except InvalidOrderParamsError as e:
+            print(f"InvalidOrderParamsError for place_order: {e}")
+        except InsufficientFundsError as e:
+            print(f"InsufficientFundsError for place_order: {e}")
+        except OrderPlacementError as e:
+            print(f"OrderPlacementError for place_order: {e}")
+        except CustomNetworkError as e:
+            print(f"NetworkError for place_order: {e}")
+        except AppLogicError as e:
+            print(f"AppLogicError for place_order: {e}")
+        except Exception as e:
+            print(f"Unexpected error during place_order test: {e}")

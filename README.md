@@ -11,7 +11,9 @@ This Python desktop application provides a graphical user interface (GUI) built 
 -   Visual feedback ("Loading...") during data fetching.
 -   Clear error messages for API issues, network problems, or missing keys.
 -   Unit tests for the application logic.
--   Option to switch between Binance Spot (default) and Binance Futures Testnet.
+-   Tabbed interface: "Balance" and "Trade" tabs for clear separation of functions.
+-   Environment selectors (Spot, Futures Live, Futures Testnet) for both Balance and Trade operations.
+-   Trade Tab: Place LIMIT and MARKET orders for Spot, Futures Live, and Futures Testnet environments.
 
 ## Project Structure
 
@@ -74,20 +76,59 @@ The project is organized into the following key files:
     python -m src.main_pyqt
     ```
 
+## ⚠️ Important Warnings and Risks ⚠️
+
+> **This application can place REAL orders on LIVE markets if configured for "Spot" or "Futures Live" environments. Trading cryptocurrencies involves a significant risk of substantial financial loss. Understand the risks before proceeding.**
+
+-   **Financial Risk**: Be aware that using this tool for live trading can result in the loss of your invested capital. Market conditions can be volatile, and software may have bugs.
+-   **API Key Security**:
+    -   Your API keys grant access to your Binance account. Treat them like passwords.
+    -   **Permissions**: For live trading, API keys MUST have trading permissions enabled. For balance checking only, read-only keys are sufficient and much safer.
+    -   **Create Specific Keys**: It is strongly recommended to create new API keys specifically for this application rather than using keys shared with other services.
+    -   **IP Restrictions**: If possible, enable IP restrictions for your API keys in your Binance account settings, whitelisting only your own IP address.
+    -   **Do Not Share**: Never share your API keys with anyone or commit them to version control (e.g., Git). This application stores them in memory only while it's running.
+-   **Test Thoroughly**:
+    -   **ALWAYS use the "Futures Testnet" environment for initial testing and familiarization.** This allows you to place test orders without risking real money.
+    -   Verify that orders are placed as expected and that balance updates reflect trades correctly in the testnet environment.
+-   **No Warranty**: This software is provided "AS-IS" without any warranties of any kind, express or implied. This includes but is not limited to implied warranties of merchantability, fitness for a particular purpose, and non-infringement.
+-   **Use At Your Own Risk**: You assume all responsibility for any and all gains and losses, financial, emotional or otherwise, experienced, suffered or incurred by you as a result of using this software. Use this software for live trading entirely at your own risk.
+
 ## Usage
 
-1.  Upon running the application, a window titled "Binance Balance Checker (PyQt)" will appear.
-2.  Enter your Binance **API Key** in the "API Key:" field.
-3.  Enter your Binance **Secret Key** in the "Secret Key:" field. The input will be masked.
-    *   **Security Note for Live Keys:** For live Binance accounts (Spot), it is **highly recommended** to use API keys with **read-only access** enabled. This application only needs permission to fetch balances, not to trade or withdraw funds.
-4.  **Select Market Type (Optional):**
-    - By default, the application fetches balances from your main Binance Spot account.
-    - To fetch balances from the **Binance Futures Testnet**, check the "Use Binance Futures Testnet" checkbox.
-    - **Important Note for Futures Testnet:** API keys for the Binance Futures Testnet are **separate and different** from your live Binance API keys. You need to generate them specifically from the [Binance Futures Testnet website](https://testnet.binancefuture.com/) after logging in with your testnet account. Using live keys with the testnet option (or vice-versa) will result in errors.
-5.  Click the "**Fetch Balance**" button.
-6.  The "Balance (USDT):" field will show "Loading..." while the data is being fetched.
-7.  Once fetched, your total USDT balance for the selected account type will be displayed (e.g., "123.45 USDT").
-8.  If there are any errors (e.g., incorrect API keys for the selected environment, network issues, API errors from Binance), an informative error message will be displayed in the balance field. The "Fetch Balance" button will re-enable after an attempt.
+The application window has two main tabs: "Balance" and "Trade". API Keys entered on the "Balance" tab are used for operations on both tabs.
+
+### Balance Tab
+
+1.  **Enter API Credentials**:
+    -   Input your Binance **API Key** in the "API Key:" field.
+    -   Input your Binance **Secret Key** in the "Secret Key:" field (input will be masked).
+2.  **Select Environment**:
+    -   Choose the desired market environment from the "Environment" dropdown:
+        -   **Spot**: Your main Binance spot account (live trading).
+        -   **Futures Live**: Your Binance Futures live trading account.
+        -   **Futures Testnet**: The Binance Futures test trading environment (uses separate testnet API keys and funds).
+    -   **API Key Note**: Remember that **Futures Testnet API keys are different** from your live Spot/Futures API keys. Get them from the [Binance Futures Testnet website](https://testnet.binancefuture.com/).
+3.  **Fetch Balance**:
+    -   Click the "**Fetch Balance**" button.
+    -   The "Balance (USDT):" field will show "Loading..." and then display your total USDT balance for the selected environment, or an error message.
+
+### Trade Tab
+
+1.  **API Keys**: Ensure your API keys are entered on the "Balance" tab. These keys will be used for placing orders. **They must have trading permissions enabled for the selected live environment.**
+2.  **Select Trading Environment**:
+    -   Choose the environment ("Spot", "Futures Live", "Futures Testnet") from the "Environment" dropdown. This determines where your order will be placed.
+3.  **Enter Order Details**:
+    -   **Symbol**: Enter the trading symbol (e.g., `BTC/USDT` for spot, `BTCUSDT` for futures often – check CCXT/Binance conventions).
+    -   **Order Type**: Select "LIMIT" or "MARKET" from the dropdown.
+        -   If "LIMIT" is selected, the "Price" field will be enabled.
+        -   If "MARKET" is selected, the "Price" field will be disabled and its content cleared.
+    -   **Side**: Select "BUY" or "SELL".
+    -   **Amount**: Enter the quantity of the base asset to trade (e.g., amount of BTC in BTC/USDT).
+    -   **Price (for LIMIT orders)**: If you selected "LIMIT" order type, enter your desired price.
+4.  **Place Order**:
+    -   Click the "**Place Order**" button.
+5.  **Check Status**:
+    -   The "Status:" label at the bottom of the Trade tab will update to show "Submitting order...", then the success response (including Order ID) or an error message from the exchange or application.
 
 ## Running Unit Tests
 

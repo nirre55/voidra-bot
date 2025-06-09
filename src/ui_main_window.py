@@ -1,98 +1,173 @@
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
-                             QLineEdit, QPushButton, QApplication, QSpacerItem, QSizePolicy, QCheckBox)
+                             QLineEdit, QPushButton, QApplication, QSpacerItem, QSizePolicy,
+                             QTabWidget, QComboBox, QFormLayout) # Removed QCheckBox, Added QTabWidget, QComboBox, QFormLayout
 from PyQt5.QtCore import QMetaObject, QCoreApplication, QRect
 from PyQt5.QtGui import QFont
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setWindowTitle("Binance Balance Checker (PyQt)")
-        MainWindow.resize(450, 250) # Adjusted size for better initial view
+        MainWindow.setWindowTitle("Binance Balance & Trade Tool (PyQt)")
+        MainWindow.resize(500, 450) # Adjusted size for tabs and more fields
 
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName("centralWidget")
         MainWindow.setCentralWidget(self.centralWidget)
 
-        self.verticalLayout = QVBoxLayout(self.centralWidget)
-        self.verticalLayout.setObjectName("verticalLayout")
+        # Main layout for the central widget (will hold the tab widget)
+        self.mainLayout = QVBoxLayout(self.centralWidget)
+        self.mainLayout.setObjectName("mainLayout")
 
-        # API Key Layout
+        # Tab Widget
+        self.tabWidget = QTabWidget(self.centralWidget)
+        self.tabWidget.setObjectName("tabWidget")
+
+        # === Balance Tab ===
+        self.balanceTab = QWidget()
+        self.balanceTab.setObjectName("balanceTab")
+        self.balanceTabLayout = QVBoxLayout(self.balanceTab)
+        self.balanceTabLayout.setObjectName("balanceTabLayout")
+
+        # API Key Layout (moved to Balance Tab)
         self.apiKeyLayout = QHBoxLayout()
         self.apiKeyLayout.setObjectName("apiKeyLayout")
-        self.apiKeyLabel = QLabel(self.centralWidget)
-        self.apiKeyLabel.setObjectName("apiKeyLabel")
-        self.apiKeyLabel.setText("API Key:")
+        self.apiKeyLabel = QLabel("API Key:") # No need for self.balanceTab as parent, layout handles it
         self.apiKeyLayout.addWidget(self.apiKeyLabel)
-        self.apiKeyLineEdit = QLineEdit(self.centralWidget)
-        self.apiKeyLineEdit.setObjectName("apiKeyLineEdit")
+        self.apiKeyLineEdit = QLineEdit()
         self.apiKeyLayout.addWidget(self.apiKeyLineEdit)
-        self.verticalLayout.addLayout(self.apiKeyLayout)
+        self.balanceTabLayout.addLayout(self.apiKeyLayout)
 
-        # Secret Key Layout
+        # Secret Key Layout (moved to Balance Tab)
         self.secretKeyLayout = QHBoxLayout()
         self.secretKeyLayout.setObjectName("secretKeyLayout")
-        self.secretKeyLabel = QLabel(self.centralWidget)
-        self.secretKeyLabel.setObjectName("secretKeyLabel")
-        self.secretKeyLabel.setText("Secret Key:")
+        self.secretKeyLabel = QLabel("Secret Key:")
         self.secretKeyLayout.addWidget(self.secretKeyLabel)
-        self.secretKeyLineEdit = QLineEdit(self.centralWidget)
-        self.secretKeyLineEdit.setObjectName("secretKeyLineEdit")
+        self.secretKeyLineEdit = QLineEdit()
         self.secretKeyLineEdit.setEchoMode(QLineEdit.Password)
         self.secretKeyLayout.addWidget(self.secretKeyLineEdit)
-        self.verticalLayout.addLayout(self.secretKeyLayout)
+        self.balanceTabLayout.addLayout(self.secretKeyLayout)
 
-        # Futures Testnet Checkbox
-        self.futuresTestnetCheckBox = QCheckBox(self.centralWidget)
-        self.futuresTestnetCheckBox.setObjectName("futuresTestnetCheckBox")
-        self.futuresTestnetCheckBox.setText("Use Binance Futures Testnet")
-        self.verticalLayout.addWidget(self.futuresTestnetCheckBox) # Added before balance display
+        # Environment ComboBox for Balance
+        self.balanceEnvironmentComboBox = QComboBox(self.balanceTab)
+        self.balanceEnvironmentComboBox.setObjectName("balanceEnvironmentComboBox")
+        self.balanceEnvironmentComboBox.addItem("Spot")
+        self.balanceEnvironmentComboBox.addItem("Futures Live")
+        self.balanceEnvironmentComboBox.addItem("Futures Testnet")
+        # Add to a QHBoxLayout for better alignment with a label if desired
+        self.balanceEnvLayout = QHBoxLayout()
+        self.balanceEnvLayout.addWidget(QLabel("Environment:"))
+        self.balanceEnvLayout.addWidget(self.balanceEnvironmentComboBox)
+        self.balanceEnvLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.balanceTabLayout.addLayout(self.balanceEnvLayout)
 
-        # Balance Display Layout
-        self.balanceLayout = QHBoxLayout()
-        self.balanceLayout.setObjectName("balanceLayout")
-        self.balanceTextLabel = QLabel(self.centralWidget)
-        self.balanceTextLabel.setObjectName("balanceTextLabel")
-        self.balanceTextLabel.setText("Balance (USDT):")
-        self.balanceLayout.addWidget(self.balanceTextLabel)
 
-        self.balanceValueLabel = QLabel(self.centralWidget)
-        self.balanceValueLabel.setObjectName("balanceValueLabel")
+        # Balance Display Layout (moved to Balance Tab)
+        self.balanceDisplayLayout = QHBoxLayout() # Renamed from self.balanceLayout
+        self.balanceDisplayLayout.setObjectName("balanceDisplayLayout")
+        self.balanceTextLabel = QLabel("Balance (USDT):")
+        self.balanceDisplayLayout.addWidget(self.balanceTextLabel)
+        self.balanceValueLabel = QLabel("N/A")
         font = QFont()
         font.setBold(True)
-        # font.setPointSize(12) # Optional: make it larger
         self.balanceValueLabel.setFont(font)
-        self.balanceValueLabel.setText("N/A")
-        self.balanceLayout.addWidget(self.balanceValueLabel)
-        self.balanceLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)) # Push value to left
-        self.verticalLayout.addLayout(self.balanceLayout)
+        self.balanceDisplayLayout.addWidget(self.balanceValueLabel)
+        self.balanceDisplayLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.balanceTabLayout.addLayout(self.balanceDisplayLayout)
 
-        # Fetch Button
-        self.fetchButtonLayout = QHBoxLayout() # Using a layout to center the button
-        self.fetchButtonLayout.setObjectName("fetchButtonLayout")
-        self.fetchButtonLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        self.fetchButton = QPushButton(self.centralWidget)
-        self.fetchButton.setObjectName("fetchButton")
-        self.fetchButton.setText("Fetch Balance")
-        self.fetchButtonLayout.addWidget(self.fetchButton)
-        self.fetchButtonLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
-        self.verticalLayout.addLayout(self.fetchButtonLayout)
+        # Fetch Balance Button (moved to Balance Tab)
+        self.fetchBalanceButton = QPushButton("Fetch Balance") # Renamed from self.fetchButton
+        self.fetchBalanceButton.setObjectName("fetchBalanceButton")
+        # Center button
+        self.fetchBalanceButtonLayout = QHBoxLayout()
+        self.fetchBalanceButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.fetchBalanceButtonLayout.addWidget(self.fetchBalanceButton)
+        self.fetchBalanceButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.balanceTabLayout.addLayout(self.fetchBalanceButtonLayout)
 
-        # Add a spacer at the bottom to push elements upwards
-        spacerItem = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
+        self.balanceTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)) # Spacer for balance tab
+        self.tabWidget.addTab(self.balanceTab, "Balance")
+
+        # === Trade Tab ===
+        self.tradeTab = QWidget()
+        self.tradeTab.setObjectName("tradeTab")
+        self.tradeTabLayout = QVBoxLayout(self.tradeTab) # Main layout for trade tab
+        self.tradeTabLayout.setObjectName("tradeTabLayout")
+
+        self.tradeFormLayout = QFormLayout() # Using QFormLayout for inputs
+        self.tradeFormLayout.setObjectName("tradeFormLayout")
+
+        # Environment ComboBox for Trade
+        self.tradeEnvironmentComboBox = QComboBox()
+        self.tradeEnvironmentComboBox.setObjectName("tradeEnvironmentComboBox")
+        self.tradeEnvironmentComboBox.addItem("Spot")
+        self.tradeEnvironmentComboBox.addItem("Futures Live")
+        self.tradeEnvironmentComboBox.addItem("Futures Testnet")
+        self.tradeFormLayout.addRow(QLabel("Environment:"), self.tradeEnvironmentComboBox)
+
+        # Symbol Input
+        self.symbolLineEdit = QLineEdit()
+        self.symbolLineEdit.setObjectName("symbolLineEdit")
+        self.tradeFormLayout.addRow(QLabel("Symbol (e.g., BTC/USDT):"), self.symbolLineEdit)
+
+        # Order Type ComboBox
+        self.orderTypeComboBox = QComboBox()
+        self.orderTypeComboBox.setObjectName("orderTypeComboBox")
+        self.orderTypeComboBox.addItem("LIMIT")
+        self.orderTypeComboBox.addItem("MARKET")
+        self.tradeFormLayout.addRow(QLabel("Order Type:"), self.orderTypeComboBox)
+
+        # Side ComboBox
+        self.sideComboBox = QComboBox()
+        self.sideComboBox.setObjectName("sideComboBox")
+        self.sideComboBox.addItem("BUY")
+        self.sideComboBox.addItem("SELL")
+        self.tradeFormLayout.addRow(QLabel("Side:"), self.sideComboBox)
+
+        # Amount Input
+        self.amountLineEdit = QLineEdit()
+        self.amountLineEdit.setObjectName("amountLineEdit")
+        self.tradeFormLayout.addRow(QLabel("Amount:"), self.amountLineEdit)
+
+        # Price Input
+        self.priceLineEdit = QLineEdit()
+        self.priceLineEdit.setObjectName("priceLineEdit")
+        self.tradeFormLayout.addRow(QLabel("Price (for LIMIT orders):"), self.priceLineEdit)
+
+        self.tradeTabLayout.addLayout(self.tradeFormLayout) # Add form layout to main trade tab layout
+
+        # Place Order Button
+        self.placeOrderButton = QPushButton("Place Order")
+        self.placeOrderButton.setObjectName("placeOrderButton")
+        # Center button
+        self.placeOrderButtonLayout = QHBoxLayout()
+        self.placeOrderButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.placeOrderButtonLayout.addWidget(self.placeOrderButton)
+        self.placeOrderButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.tradeTabLayout.addLayout(self.placeOrderButtonLayout)
+
+        # Trade Status Display
+        self.tradeStatusLabel = QLabel("Status: Ready")
+        self.tradeStatusLabel.setObjectName("tradeStatusLabel")
+        self.tradeStatusLabel.setWordWrap(True)
+        self.tradeTabLayout.addWidget(self.tradeStatusLabel)
+
+        self.tradeTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)) # Spacer for trade tab
+        self.tabWidget.addTab(self.tradeTab, "Trade")
+
+        # Add TabWidget to the main layout of the central widget
+        self.mainLayout.addWidget(self.tabWidget)
 
         self.retranslateUi(MainWindow)
-        QMetaObject.connectSlotsByName(MainWindow)
+        # QMetaObject.connectSlotsByName(MainWindow) # Usually called by uic or if using Qt Designer setup
 
     def retranslateUi(self, MainWindow):
         _translate = QCoreApplication.translate
-        # MainWindow.setWindowTitle(_translate("MainWindow", "Binance Balance Checker (PyQt)"))
+        # MainWindow.setWindowTitle(_translate("MainWindow", "Binance Balance & Trade Tool (PyQt)"))
         # self.apiKeyLabel.setText(_translate("MainWindow", "API Key:"))
-        # self.secretKeyLabel.setText(_translate("MainWindow", "Secret Key:"))
-        # self.balanceTextLabel.setText(_translate("MainWindow", "Balance (USDT):"))
-        # self.balanceValueLabel.setText(_translate("MainWindow", "N/A"))
-        # self.fetchButton.setText(_translate("MainWindow", "Fetch Balance"))
-        # Note: setText calls are already done during widget creation, retranslateUi is more for internationalization
+        # ... (texts for other widgets are set during creation)
+        # self.tabWidget.setTabText(self.tabWidget.indexOf(self.balanceTab), _translate("MainWindow", "Balance"))
+        # self.tabWidget.setTabText(self.tabWidget.indexOf(self.tradeTab), _translate("MainWindow", "Trade"))
+        # Note: setText calls are mostly done during widget creation. Retranslate is for language changes.
 
 
 if __name__ == '__main__':

@@ -37,6 +37,11 @@ class BinanceApp:
         # This will be implemented in a later step.
         self.fetch_button.config(state=tk.DISABLED)
         self.balance_display_var.set("Loading...")
+        self.master.update_idletasks() # Ensures UI updates (button state, loading message) are shown immediately.
+        # For truly non-blocking behavior with long network requests,
+        # the ccxt calls should be moved to a separate thread.
+        # update_idletasks() helps with immediate feedback but doesn't prevent
+        # the main Tkinter loop from freezing during the actual network call.
 
         api_key = self.api_key_entry.get()
         secret_key = self.secret_key_entry.get()
@@ -53,14 +58,8 @@ class BinanceApp:
             exchange = ccxt.binance({
                 'apiKey': api_key,
                 'secret': secret_key,
-                 "options": {
-                    "defaultType": "future",  # utiliser le marché des futures
-                    "adjustForTimeDifference": True,
-                },
                 # 'enableRateLimit': True, # Optional: to avoid hitting API rate limits
             })
-            exchange.set_sandbox_mode(True)  # Use testnet for safety
-
             balance_data = exchange.fetch_balance()
             usdt_balance = balance_data['total'].get('USDT', 0.0)
             self.balance_display_var.set(f"{usdt_balance:.2f} USDT")

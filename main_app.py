@@ -35,17 +35,20 @@ class BinanceApp:
     def fetch_balance(self):
         # Placeholder for fetching balance logic
         # This will be implemented in a later step.
+        self.fetch_button.config(state=tk.DISABLED)
+        self.balance_display_var.set("Loading...")
+
         api_key = self.api_key_entry.get()
         secret_key = self.secret_key_entry.get()
+
         if not api_key or not secret_key:
             self.balance_display_var.set("API Key and Secret Key are required.")
+            self.fetch_button.config(state=tk.NORMAL)
             return
-        self.balance_display_var.set(f"Fetching for {api_key[:5]}...") # Placeholder
-        print(f"API Key: {api_key}")
-        print(f"Secret Key: {secret_key}")
-        # In a real app, you'd call the Binance API here.
-        # For now, let's simulate a successful fetch.
-        # self.balance_display_var.set("1234.56 USDT")
+
+        # print(f"API Key: {api_key}") # Optional: for debugging, but remove for production
+        # print(f"Secret Key: {secret_key}") # Optional: for debugging, but remove for production
+
         try:
             exchange = ccxt.binance({
                 'apiKey': api_key,
@@ -67,6 +70,8 @@ class BinanceApp:
             self.balance_display_var.set(f"Exchange Error: {e}")
         except Exception as e:
             self.balance_display_var.set(f"An error occurred: {e}")
+        finally:
+            self.fetch_button.config(state=tk.NORMAL)
 
 
 if __name__ == '__main__':

@@ -68,10 +68,10 @@ The project is organized into the following key files:
 ## Running the Application
 
 1.  **Ensure your virtual environment is activated** (if you created one).
-2.  **Navigate to the project's root directory.**
+2.  **Navigate to the project's root directory.** Ensure you are in the project's root directory (the one containing the `src` folder and `requirements.txt`) when running this command.
 3.  **Run the application:**
     ```bash
-    python src/main_pyqt.py
+    python -m src.main_pyqt
     ```
 
 ## Usage

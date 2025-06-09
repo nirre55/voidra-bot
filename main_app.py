@@ -50,8 +50,14 @@ class BinanceApp:
             exchange = ccxt.binance({
                 'apiKey': api_key,
                 'secret': secret_key,
+                 "options": {
+                    "defaultType": "future",  # utiliser le marché des futures
+                    "adjustForTimeDifference": True,
+                },
                 # 'enableRateLimit': True, # Optional: to avoid hitting API rate limits
             })
+            exchange.set_sandbox_mode(True)  # Use testnet for safety
+
             balance_data = exchange.fetch_balance()
             usdt_balance = balance_data['total'].get('USDT', 0.0)
             self.balance_display_var.set(f"{usdt_balance:.2f} USDT")

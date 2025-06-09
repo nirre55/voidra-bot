@@ -2,8 +2,8 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 
-from ui_main_window import Ui_MainWindow
-from app_logic import BinanceLogic, ApiKeyMissingError, CustomNetworkError, CustomExchangeError, AppLogicError
+from .ui_main_window import Ui_MainWindow
+from .app_logic import BinanceLogic, ApiKeyMissingError, CustomNetworkError, CustomExchangeError, AppLogicError
 
 class Worker(QThread):
     """

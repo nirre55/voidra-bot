@@ -16,13 +16,15 @@ This Python desktop application provides a graphical user interface (GUI) built 
 
 The project is organized into the following key files:
 
--   `main_pyqt.py`: The main application script that launches the PyQt5 GUI, handles user interactions, and integrates the UI with the business logic using a worker thread.
--   `ui_main_window.py`: Defines the structure and layout of the main PyQt5 window and its widgets (auto-generated or manually created based on Qt Designer/PyQt code).
--   `app_logic.py`: Contains the `BinanceLogic` class, which encapsulates the business logic for interacting with the Binance API via the `ccxt` library. It handles fetching balances and custom error management.
--   `test_app_logic.py`: Includes unit tests for the `BinanceLogic` class to ensure its reliability.
--   `requirements.txt`: Lists the Python dependencies required for the project.
+-   `/src`: Contains the main application source code.
+    -   `main_pyqt.py`: Main application script (PyQt5).
+    -   `ui_main_window.py`: Defines the UI structure (PyQt5).
+    -   `app_logic.py`: Handles application logic (Binance API interaction).
+-   `/tests`: Contains unit tests.
+    -   `test_app_logic.py`: Unit tests for `app_logic.py`.
 -   `README.md`: This file, providing information about the project.
--   `main_app.py`: (Previous Tkinter version, may be present if not cleaned up - this README focuses on the PyQt5 version).
+-   `requirements.txt`: Python dependencies.
+-   `.gitignore`: Specifies intentionally untracked files that Git should ignore.
 
 ## Prerequisites
 
@@ -65,10 +67,10 @@ The project is organized into the following key files:
 ## Running the Application
 
 1.  **Ensure your virtual environment is activated** (if you created one).
-2.  **Navigate to the directory** where `main_pyqt.py` is located.
+2.  **Navigate to the project's root directory.**
 3.  **Run the application:**
     ```bash
-    python main_pyqt.py
+    python src/main_pyqt.py
     ```
 
 ## Usage
@@ -94,7 +96,7 @@ To ensure the application logic for interacting with the Binance API is working 
     ```
     Or, for more verbose output:
     ```bash
-    python -m unittest -v test_app_logic.py
+    python -m unittest discover -v tests
     ```
     The tests will mock the actual network calls to Binance, so you don't need live API keys to run them.
 

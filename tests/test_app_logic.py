@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 import ccxt # Required for ccxt.NetworkError, ccxt.ExchangeError
-from app_logic import (
+from src.app_logic import (
     BinanceLogic,
     ApiKeyMissingError,
     CustomNetworkError,
@@ -16,7 +16,7 @@ class TestBinanceLogic(unittest.TestCase):
         self.dummy_api_key = "test_api_key"
         self.dummy_secret_key = "test_secret_key"
 
-    @patch('app_logic.ccxt.binance')
+    @patch('src.app_logic.ccxt.binance')
     def test_get_balance_success(self, mock_binance_constructor):
         """Test successful balance retrieval."""
         mock_exchange_instance = MagicMock()
@@ -33,7 +33,7 @@ class TestBinanceLogic(unittest.TestCase):
         })
         mock_exchange_instance.fetch_balance.assert_called_once()
 
-    @patch('app_logic.ccxt.binance')
+    @patch('src.app_logic.ccxt.binance')
     def test_get_balance_usdt_missing(self, mock_binance_constructor):
         """Test when USDT is missing from the balance data."""
         mock_exchange_instance = MagicMock()
@@ -50,7 +50,7 @@ class TestBinanceLogic(unittest.TestCase):
         })
         mock_exchange_instance.fetch_balance.assert_called_once()
 
-    @patch('app_logic.ccxt.binance')
+    @patch('src.app_logic.ccxt.binance')
     def test_get_balance_total_missing(self, mock_binance_constructor):
         """Test when 'total' key is missing from the balance data."""
         mock_exchange_instance = MagicMock()
@@ -78,7 +78,7 @@ class TestBinanceLogic(unittest.TestCase):
         with self.assertRaisesRegex(ApiKeyMissingError, "API Key and Secret Key are required."):
             self.logic.get_balance(None, None)
 
-    @patch('app_logic.ccxt.binance')
+    @patch('src.app_logic.ccxt.binance')
     def test_get_balance_network_error(self, mock_binance_constructor):
         """Test handling of ccxt.NetworkError."""
         mock_exchange_instance = MagicMock()
@@ -88,7 +88,7 @@ class TestBinanceLogic(unittest.TestCase):
         with self.assertRaisesRegex(CustomNetworkError, "Network error connecting to Binance: Connection failed"):
             self.logic.get_balance(self.dummy_api_key, self.dummy_secret_key)
 
-    @patch('app_logic.ccxt.binance')
+    @patch('src.app_logic.ccxt.binance')
     def test_get_balance_exchange_error(self, mock_binance_constructor):
         """Test handling of ccxt.ExchangeError."""
         mock_exchange_instance = MagicMock()
@@ -98,7 +98,7 @@ class TestBinanceLogic(unittest.TestCase):
         with self.assertRaisesRegex(CustomExchangeError, "Binance API error: Invalid API key"):
             self.logic.get_balance(self.dummy_api_key, self.dummy_secret_key)
 
-    @patch('app_logic.ccxt.binance')
+    @patch('src.app_logic.ccxt.binance')
     def test_get_balance_unexpected_error(self, mock_binance_constructor):
         """Test handling of other unexpected errors."""
         mock_exchange_instance = MagicMock()

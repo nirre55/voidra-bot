@@ -11,6 +11,7 @@ This Python desktop application provides a graphical user interface (GUI) built 
 -   Visual feedback ("Loading...") during data fetching.
 -   Clear error messages for API issues, network problems, or missing keys.
 -   Unit tests for the application logic.
+-   Option to switch between Binance Spot (default) and Binance Futures Testnet.
 
 ## Project Structure
 
@@ -78,11 +79,15 @@ The project is organized into the following key files:
 1.  Upon running the application, a window titled "Binance Balance Checker (PyQt)" will appear.
 2.  Enter your Binance **API Key** in the "API Key:" field.
 3.  Enter your Binance **Secret Key** in the "Secret Key:" field. The input will be masked.
-    *   **Important Security Note:** It is **highly recommended** to use API keys with **read-only access** enabled. This application only needs permission to fetch balances, not to trade or withdraw funds. Create a new API key on Binance specifically for this purpose if possible.
-4.  Click the "**Fetch Balance**" button.
-5.  The "Balance (USDT):" field will show "Loading..." while the data is being fetched.
-6.  Once fetched, your total USDT balance will be displayed (e.g., "123.45 USDT").
-7.  If there are any errors (e.g., incorrect API keys, network issues, API errors from Binance), an informative error message will be displayed in the balance field. The "Fetch Balance" button will re-enable after an attempt.
+    *   **Security Note for Live Keys:** For live Binance accounts (Spot), it is **highly recommended** to use API keys with **read-only access** enabled. This application only needs permission to fetch balances, not to trade or withdraw funds.
+4.  **Select Market Type (Optional):**
+    - By default, the application fetches balances from your main Binance Spot account.
+    - To fetch balances from the **Binance Futures Testnet**, check the "Use Binance Futures Testnet" checkbox.
+    - **Important Note for Futures Testnet:** API keys for the Binance Futures Testnet are **separate and different** from your live Binance API keys. You need to generate them specifically from the [Binance Futures Testnet website](https://testnet.binancefuture.com/) after logging in with your testnet account. Using live keys with the testnet option (or vice-versa) will result in errors.
+5.  Click the "**Fetch Balance**" button.
+6.  The "Balance (USDT):" field will show "Loading..." while the data is being fetched.
+7.  Once fetched, your total USDT balance for the selected account type will be displayed (e.g., "123.45 USDT").
+8.  If there are any errors (e.g., incorrect API keys for the selected environment, network issues, API errors from Binance), an informative error message will be displayed in the balance field. The "Fetch Balance" button will re-enable after an attempt.
 
 ## Running Unit Tests
 

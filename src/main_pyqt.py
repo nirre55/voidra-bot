@@ -12,11 +12,12 @@ class Worker(QThread):
     success = pyqtSignal(float)
     error = pyqtSignal(str)
 
-    def __init__(self, binance_logic: BinanceLogic, api_key: str, secret_key: str, parent=None):
+    def __init__(self, binance_logic: BinanceLogic, api_key: str, secret_key: str, use_futures_testnet: bool, parent=None):
         super().__init__(parent)
         self.binance_logic = binance_logic
         self.api_key = api_key
         self.secret_key = secret_key
+        self.use_futures_testnet = use_futures_testnet
 
     def run(self):
         """
@@ -24,7 +25,7 @@ class Worker(QThread):
         Emits 'success' with the balance or 'error' with a message.
         """
         try:
-            balance = self.binance_logic.get_balance(self.api_key, self.secret_key)
+            balance = self.binance_logic.get_balance(self.api_key, self.secret_key, self.use_futures_testnet)
             self.success.emit(balance)
         except ApiKeyMissingError as e: # Should be caught before starting thread, but as a safeguard
             self.error.emit(str(e))
@@ -54,6 +55,7 @@ class BinanceAppPyQt(QMainWindow):
     def start_fetch_balance(self):
         api_key = self.ui.apiKeyLineEdit.text().strip()
         secret_key = self.ui.secretKeyLineEdit.text().strip()
+        use_futures = self.ui.futuresTestnetCheckBox.isChecked()
 
         if not api_key or not secret_key:
             self.ui.balanceValueLabel.setText("API Key and Secret Key are required.")
@@ -71,7 +73,7 @@ class BinanceAppPyQt(QMainWindow):
             # However, the button state handles this mostly.
             pass
 
-        self.worker_thread = Worker(self.binance_logic, api_key, secret_key)
+        self.worker_thread = Worker(self.binance_logic, api_key, secret_key, use_futures)
         self.worker_thread.success.connect(self.on_fetch_success)
         self.worker_thread.error.connect(self.on_fetch_error)
         # Re-enable button once the thread is done, regardless of success/failure

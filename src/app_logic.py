@@ -26,13 +26,14 @@ class BinanceLogic:
         """
         pass
 
-    def get_balance(self, api_key: str, secret_key: str) -> float:
+    def get_balance(self, api_key: str, secret_key: str, use_futures_testnet: bool = False) -> float:
         """
         Fetches the total USDT balance from Binance.
 
         Args:
             api_key: The Binance API key.
             secret_key: The Binance secret key.
+            use_futures_testnet: If True, uses Binance Futures Testnet. Defaults to False.
 
         Returns:
             The total USDT balance as a float.
@@ -47,17 +48,27 @@ class BinanceLogic:
             raise ApiKeyMissingError("API Key and Secret Key are required.")
 
         try:
-            # Initialize the Binance exchange object with API credentials
-            # 'adjustForTimeDifference': True can help if local clock is slightly off
-            exchange = ccxt.binance({
+            exchange_config = {
                 'apiKey': api_key,
                 'secret': secret_key,
                 'options': {
                     'adjustForTimeDifference': True,
                 }
-            })
+            }
+            if use_futures_testnet:
+                # For futures, 'defaultType': 'future' might be needed for some ccxt versions or specific endpoints
+                # and set_sandbox_mode(True) is crucial for testnet.
+                exchange_config['options']['defaultType'] = 'future'
+
+            exchange = ccxt.binance(exchange_config)
+
+            if use_futures_testnet:
+                exchange.set_sandbox_mode(True)
 
             # Fetch the balance
+            # Note: The structure of balance_data might differ slightly between spot and futures.
+            # For USDT, it's often found under 'total', 'free', or directly in the asset list.
+            # This implementation assumes 'total' for simplicity, adjust if needed based on ccxt's futures balance structure.
             balance_data = exchange.fetch_balance()
 
             # Extract the total USDT balance

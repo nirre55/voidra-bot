@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                             QLabel, QLineEdit, QPushButton, QApplication, QSpacerItem, QSizePolicy)
+from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
+                             QLineEdit, QPushButton, QApplication, QSpacerItem, QSizePolicy, QCheckBox)
 from PyQt5.QtCore import QMetaObject, QCoreApplication, QRect
 from PyQt5.QtGui import QFont
 
@@ -40,6 +40,12 @@ class Ui_MainWindow(object):
         self.secretKeyLineEdit.setEchoMode(QLineEdit.Password)
         self.secretKeyLayout.addWidget(self.secretKeyLineEdit)
         self.verticalLayout.addLayout(self.secretKeyLayout)
+
+        # Futures Testnet Checkbox
+        self.futuresTestnetCheckBox = QCheckBox(self.centralWidget)
+        self.futuresTestnetCheckBox.setObjectName("futuresTestnetCheckBox")
+        self.futuresTestnetCheckBox.setText("Use Binance Futures Testnet")
+        self.verticalLayout.addWidget(self.futuresTestnetCheckBox) # Added before balance display
 
         # Balance Display Layout
         self.balanceLayout = QHBoxLayout()

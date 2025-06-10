@@ -163,6 +163,20 @@ class Ui_MainWindow(object):
         self.simulationFormLayout = QFormLayout()
         self.simulationFormLayout.setObjectName("simulationFormLayout")
 
+        # Symbol ComboBox
+        self.simSymbolLabel = QLabel("Symbole:")
+        self.simSymbolComboBox = QComboBox()
+        self.simSymbolComboBox.setObjectName("simSymbolComboBox")
+        self.simSymbolComboBox.addItems(["BTC/USDT", "ETH/USDT", "ADA/USDT", "SOL/USDT"]) # Added more examples
+        self.simulationFormLayout.addRow(self.simSymbolLabel, self.simSymbolComboBox)
+
+        # Environment ComboBox
+        self.simEnvironmentLabel = QLabel("Environnement:")
+        self.simEnvironmentComboBox = QComboBox()
+        self.simEnvironmentComboBox.setObjectName("simEnvironmentComboBox")
+        self.simEnvironmentComboBox.addItems(["Spot", "Futures Live", "Futures Testnet"]) # Consistent with other tabs
+        self.simulationFormLayout.addRow(self.simEnvironmentLabel, self.simEnvironmentComboBox)
+
         # Balance Input
         self.simBalanceLabel = QLabel("Balance Total à Investir:")
         self.simBalanceLineEdit = QLineEdit()

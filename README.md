@@ -136,6 +136,8 @@ The application window has two main tabs: "Balance" and "Trade". API Keys entere
 The "Simulation" tab allows you to calculate and visualize a Dollar Cost Averaging (DCA) strategy based on a set of input parameters. This helps in understanding how many DCA levels can be achieved and the investment at each price point down to a catastrophic price.
 
 1.  **Enter Simulation Parameters**:
+    -   **Symbole**: Select a trading symbol (e.g., BTC/USDT, ETH/USDT). *Note: This field is for future enhancements and does not currently affect the simulation calculation.*
+    -   **Environnement**: Select the market environment (Spot, Futures Live, Futures Testnet). *Note: This field is for future enhancements and does not currently affect the simulation calculation.*
     -   **Balance Total à Investir**: The total amount of capital you want to allocate for this DCA simulation.
     -   **Prix d'entrée initial**: The price at which your first investment level is considered.
     -   **Prix catastrophique (seuil d'arrêt)**: The price threshold. The simulation calculates DCA levels down to this price. If the price drops to or below this level, no further DCA steps are considered beyond the one that hits/crosses this threshold.

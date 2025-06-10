@@ -11,9 +11,10 @@ This Python desktop application provides a graphical user interface (GUI) built 
 -   Visual feedback ("Loading...") during data fetching.
 -   Clear error messages for API issues, network problems, or missing keys.
 -   Unit tests for the application logic.
--   Tabbed interface: "Balance" and "Trade" tabs for clear separation of functions.
+-   Tabbed interface: "Balance", "Trade", and "Simulation" tabs for clear separation of functions.
 -   Environment selectors (Spot, Futures Live, Futures Testnet) for both Balance and Trade operations.
 -   Trade Tab: Place LIMIT and MARKET orders for Spot, Futures Live, and Futures Testnet environments.
+-   Simulation Tab: Calculate Dollar Cost Averaging (DCA) iteration strategies based on balance, entry price, catastrophic price, and drop percentage.
 
 ## Project Structure
 
@@ -129,6 +130,26 @@ The application window has two main tabs: "Balance" and "Trade". API Keys entere
     -   Click the "**Place Order**" button.
 5.  **Check Status**:
     -   The "Status:" label at the bottom of the Trade tab will update to show "Submitting order...", then the success response (including Order ID) or an error message from the exchange or application.
+
+### Simulation Tab
+
+The "Simulation" tab allows you to calculate and visualize a Dollar Cost Averaging (DCA) strategy based on a set of input parameters. This helps in understanding how many DCA levels can be achieved and the investment at each price point down to a catastrophic price.
+
+1.  **Enter Simulation Parameters**:
+    -   **Balance Total à Investir**: The total amount of capital you want to allocate for this DCA simulation.
+    -   **Prix d'entrée initial**: The price at which your first investment level is considered.
+    -   **Prix catastrophique (seuil d'arrêt)**: The price threshold. The simulation calculates DCA levels down to this price. If the price drops to or below this level, no further DCA steps are considered beyond the one that hits/crosses this threshold.
+    -   **Pourcentage de drop par niveau (%)**: The percentage the price must drop from the previous level for a new DCA investment to occur (e.g., 50 for a 50% drop).
+2.  **Calculate Simulation**:
+    -   Click the "**Calculer la Simulation**" button.
+3.  **View Results**:
+    -   The results will be displayed in the text area below the button.
+    -   This includes:
+        -   A summary of your input parameters.
+        -   The total number of DCA levels possible.
+        -   The amount of capital to be invested at each level.
+        -   A detailed breakdown for each DCA level, showing the entry price and the quantity of the asset that can be bought with the allocated amount for that level.
+    -   If there are errors in your input (e.g., non-numeric values, invalid percentages), an error message will be shown in the results area.
 
 ## Running Unit Tests
 

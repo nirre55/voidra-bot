@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPushButton, QApplication, QSpacerItem, QSizePolicy,
-                             QTabWidget, QComboBox, QFormLayout) # Removed QCheckBox, Added QTabWidget, QComboBox, QFormLayout
+                             QTabWidget, QComboBox, QFormLayout, QTextEdit) # Added QTextEdit
 from PyQt5.QtCore import QMetaObject, QCoreApplication, QRect
 from PyQt5.QtGui import QFont
 
@@ -8,7 +8,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.setWindowTitle("Binance Balance & Trade Tool (PyQt)")
-        MainWindow.resize(500, 450) # Adjusted size for tabs and more fields
+        MainWindow.resize(500, 550) # Adjusted size for new tab
 
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName("centralWidget")
@@ -154,6 +154,61 @@ class Ui_MainWindow(object):
         self.tradeTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)) # Spacer for trade tab
         self.tabWidget.addTab(self.tradeTab, "Trade")
 
+        # === Simulation Tab ===
+        self.simulationTab = QWidget()
+        self.simulationTab.setObjectName("simulationTab")
+        self.simulationTabLayout = QVBoxLayout(self.simulationTab)
+        self.simulationTabLayout.setObjectName("simulationTabLayout")
+
+        self.simulationFormLayout = QFormLayout()
+        self.simulationFormLayout.setObjectName("simulationFormLayout")
+
+        # Balance Input
+        self.simBalanceLabel = QLabel("Balance Total à Investir:")
+        self.simBalanceLineEdit = QLineEdit()
+        self.simBalanceLineEdit.setObjectName("simBalanceLineEdit")
+        self.simulationFormLayout.addRow(self.simBalanceLabel, self.simBalanceLineEdit)
+
+        # Prix d'entrée Input
+        self.simPrixEntreeLabel = QLabel("Prix d'entrée initial:")
+        self.simPrixEntreeLineEdit = QLineEdit()
+        self.simPrixEntreeLineEdit.setObjectName("simPrixEntreeLineEdit")
+        self.simulationFormLayout.addRow(self.simPrixEntreeLabel, self.simPrixEntreeLineEdit)
+
+        # Prix catastrophique Input
+        self.simPrixCatastrophiqueLabel = QLabel("Prix catastrophique (seuil d'arrêt):")
+        self.simPrixCatastrophiqueLineEdit = QLineEdit()
+        self.simPrixCatastrophiqueLineEdit.setObjectName("simPrixCatastrophiqueLineEdit")
+        self.simulationFormLayout.addRow(self.simPrixCatastrophiqueLabel, self.simPrixCatastrophiqueLineEdit)
+
+        # Pourcentage de drop Input
+        self.simDropPercentLabel = QLabel("Pourcentage de drop par niveau (%):")
+        self.simDropPercentLineEdit = QLineEdit()
+        self.simDropPercentLineEdit.setObjectName("simDropPercentLineEdit")
+        self.simulationFormLayout.addRow(self.simDropPercentLabel, self.simDropPercentLineEdit)
+
+        self.simulationTabLayout.addLayout(self.simulationFormLayout)
+
+        # Calculer Button
+        self.simCalculerButton = QPushButton("Calculer la Simulation")
+        self.simCalculerButton.setObjectName("simCalculerButton")
+        # Center button
+        self.simCalculerButtonLayout = QHBoxLayout()
+        self.simCalculerButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.simCalculerButtonLayout.addWidget(self.simCalculerButton)
+        self.simCalculerButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.simulationTabLayout.addLayout(self.simCalculerButtonLayout)
+
+
+        # Results Display Area
+        self.simResultsTextEdit = QTextEdit()
+        self.simResultsTextEdit.setObjectName("simResultsTextEdit")
+        self.simResultsTextEdit.setReadOnly(True)
+        self.simulationTabLayout.addWidget(self.simResultsTextEdit)
+        self.simulationTabLayout.setStretchFactor(self.simResultsTextEdit, 1) # Make QTextEdit expand
+
+        self.tabWidget.addTab(self.simulationTab, "Simulation DCA")
+
         # Add TabWidget to the main layout of the central widget
         self.mainLayout.addWidget(self.tabWidget)
 
@@ -167,6 +222,7 @@ class Ui_MainWindow(object):
         # ... (texts for other widgets are set during creation)
         # self.tabWidget.setTabText(self.tabWidget.indexOf(self.balanceTab), _translate("MainWindow", "Balance"))
         # self.tabWidget.setTabText(self.tabWidget.indexOf(self.tradeTab), _translate("MainWindow", "Trade"))
+        # self.tabWidget.setTabText(self.tabWidget.indexOf(self.simulationTab), _translate("MainWindow", "Simulation DCA"))
         # Note: setText calls are mostly done during widget creation. Retranslate is for language changes.
 
 

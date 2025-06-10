@@ -6,6 +6,7 @@ from .ui_main_window import Ui_MainWindow
 from .app_logic import (BinanceLogic, ApiKeyMissingError, CustomNetworkError,
                         CustomExchangeError, AppLogicError, MarketEnvironment,
                         OrderPlacementError, InsufficientFundsError, InvalidOrderParamsError)
+from .simulation_logic import calculer_iterations, SimulationError
 
 class BalanceWorker(QThread): # Renamed from Worker
     """
@@ -91,6 +92,9 @@ class BinanceAppPyQt(QMainWindow):
 
         # Set initial state for price field
         self.on_order_type_changed(self.ui.orderTypeComboBox.currentText())
+
+        # Connect signals for Simulation Tab
+        self.ui.simCalculerButton.clicked.connect(self.handle_simulation_calculation)
 
 
     def _get_selected_environment(self, combo_box) -> MarketEnvironment | None:
@@ -229,6 +233,48 @@ class BinanceAppPyQt(QMainWindow):
             self.order_placement_worker_thread.quit()
             self.order_placement_worker_thread.wait()
         event.accept()
+
+    @pyqtSlot()
+    def handle_simulation_calculation(self):
+        try:
+            # 1. Retrieve input values from QLineEdits
+            balance_str = self.ui.simBalanceLineEdit.text().strip()
+            prix_entree_str = self.ui.simPrixEntreeLineEdit.text().strip()
+            prix_catastrophique_str = self.ui.simPrixCatastrophiqueLineEdit.text().strip()
+            drop_percent_str = self.ui.simDropPercentLineEdit.text().strip()
+
+            # 2. Validate and convert to float (basic validation)
+            if not all([balance_str, prix_entree_str, prix_catastrophique_str, drop_percent_str]):
+                self.ui.simResultsTextEdit.setText("Erreur: Tous les champs doivent être remplis.")
+                return
+
+            try:
+                balance = float(balance_str)
+                prix_entree = float(prix_entree_str)
+                prix_catastrophique = float(prix_catastrophique_str)
+                drop_percent = float(drop_percent_str)
+            except ValueError:
+                self.ui.simResultsTextEdit.setText("Erreur: Les entrées numériques doivent être des nombres valides (ex: 1000 ou 0.5).")
+                return
+
+            # 3. Call the simulation logic function
+            results_data = calculer_iterations(
+                balance=balance,
+                prix_entree=prix_entree,
+                prix_catastrophique=prix_catastrophique,
+                drop_percent=drop_percent
+            )
+
+            # 4. Format and display results
+            formatted_results = "\n".join(results_data.get("details_text", []))
+            self.ui.simResultsTextEdit.setText(formatted_results)
+
+        except SimulationError as sim_e:
+            self.ui.simResultsTextEdit.setText(f"Erreur de Simulation: {sim_e}")
+        except Exception as e:
+            self.ui.simResultsTextEdit.setText(f"Une erreur inattendue est survenue: {e}")
+            # import traceback
+            # print(traceback.format_exc()) # For debugging
 
 
 if __name__ == '__main__':

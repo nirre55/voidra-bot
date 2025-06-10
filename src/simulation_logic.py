@@ -180,4 +180,3 @@ if __name__ == '__main__':
         print(f"Erreur de simulation: {e}")
     except Exception as e:
         print(f"Autre Erreur: {type(e).__name__} {e}")
-```

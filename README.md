@@ -16,9 +16,9 @@ This Python desktop application provides a graphical user interface (GUI) built 
     -   Input for symbol, order type, side, amount, and price.
     -   Real-time status updates for order placement.
 -   **Simulation Tab**:
-    -   Calculate Dollar Cost Averaging (DCA) iteration strategies.
-    -   Inputs for total balance, initial entry price, catastrophic price, and drop percentage.
-    -   Detailed breakdown of DCA levels, investment per level, and quantities.
+    -   Calculate Dollar Cost Averaging (DCA) iteration strategies based on balance, entry price, catastrophic price, and drop percentage.
+    -   Optionally select symbol and environment for context (currently not used in calculation but planned for future enhancements like pre-filling entry price).
+    -   Place multiple DCA LIMIT BUY orders directly based on simulation results for a chosen symbol and environment.
 -   Asynchronous API calls using QThread to prevent UI freezing.
 -   Visual feedback ("Loading...", "Submitting order...") during operations.
 -   Clear error messages for API issues, network problems, or invalid inputs.
@@ -31,9 +31,9 @@ The project is organized into the following key files:
 -   `/src`: Contains the main application source code.
     -   `__init__.py`: Makes `src` a Python package.
     -   `main_pyqt.py`: Main application script (PyQt5), handles UI logic and event handling.
-    -   `ui_main_window.py`: Defines the UI structure (PyQt5), created with Qt Designer or coded.
-    -   `app_logic.py`: Handles core application logic, including Binance API interaction via `ccxt`.
-    -   `simulation_logic.py`: Contains logic for the DCA simulation.
+    -   `ui_main_window.py`: Defines the UI structure (PyQt5).
+    -   `app_logic.py`: Handles core application logic, including Binance API interaction via `ccxt` (balance fetching, order placement).
+    -   `simulation_logic.py`: Contains logic for the DCA simulation calculations.
     -   `keyring_utils.py`: Manages secure storage and retrieval of API keys using the system keyring.
     -   `constants/`: Stores application-wide constants.
         -   `__init__.py`: Makes `constants` a Python package.
@@ -57,7 +57,7 @@ The project is organized into the following key files:
 
 1.  **Clone the repository (or download the files):**
     ```bash
-    git clone <repository_url>
+    git clone <repository_url> # Replace <repository_url> with the actual URL
     cd <repository_directory_name>
     ```
     Alternatively, download the necessary files into a local directory.
@@ -106,7 +106,7 @@ The project is organized into the following key files:
 
 ## Usage
 
-The application window has three main tabs: "Balance", "Trade", and "Simulation". API Keys entered on the "Balance" tab are used for operations on both the "Balance" and "Trade" tabs.
+The application window has three main tabs: "Balance", "Trade", and "Simulation". API Keys entered on the "Balance" tab are used for operations on the "Balance" and "Trade" tabs, and also for placing DCA orders from the "Simulation" tab.
 
 ### Secure API Key Storage (Keyring)
 
@@ -141,7 +141,7 @@ The application window has three main tabs: "Balance", "Trade", and "Simulation"
 
 ### Trade Tab
 
-1.  **API Keys**: Ensure your API keys are entered and potentially saved via the "Balance" tab. These keys will be used for placing orders. **They must have trading permissions enabled for the selected live environment.**
+1.  **API Keys**: Ensure your API keys are entered on the "Balance" tab. These keys will be used for placing orders. **They must have trading permissions enabled for the selected live environment.**
 2.  **Select Trading Environment**:
     -   Choose the environment ("Spot", "Futures Live", "Futures Testnet") from the "Environment" dropdown. This determines where your order will be placed.
 3.  **Enter Order Details**:
@@ -159,25 +159,35 @@ The application window has three main tabs: "Balance", "Trade", and "Simulation"
 
 ### Simulation Tab
 
-The "Simulation" tab allows you to calculate and visualize a Dollar Cost Averaging (DCA) strategy based on a set of input parameters. This helps in understanding how many DCA levels can be achieved and the investment at each price point down to a catastrophic price.
+The "Simulation" tab allows you to calculate and visualize a Dollar Cost Averaging (DCA) strategy. This feature helps in understanding how many DCA levels can be achieved and the investment at each price point down to a specified catastrophic price. After calculating a simulation, you can choose to place the generated DCA orders.
 
 1.  **Enter Simulation Parameters**:
-    -   **Symbole**: Select a trading symbol (e.g., BTC/USDT, ETH/USDT). *Note: This field is for future enhancements and does not currently affect the simulation calculation.*
-    -   **Environnement**: Select the market environment (Spot, Futures Live, Futures Testnet). *Note: This field is for future enhancements and does not currently affect the simulation calculation.*
-    -   **Balance Total à Investir**: The total amount of capital you want to allocate for this DCA simulation.
-    -   **Prix d'entrée initial**: The price at which your first investment level is considered.
-    -   **Prix catastrophique (seuil d'arrêt)**: The price threshold. The simulation calculates DCA levels down to this price. If the price drops to or below this level, no further DCA steps are considered beyond the one that hits/crosses this threshold.
-    -   **Pourcentage de drop par niveau (%)**: The percentage the price must drop from the previous level for a new DCA investment to occur (e.g., 50 for a 50% drop).
+    -   **Symbole**: Select or enter a trading symbol (e.g., BTC/USDT). This symbol will be used if you decide to place DCA orders.
+    -   **Environnement**: Select the market environment (Spot, Futures Live, Futures Testnet) where DCA orders would be placed. *API keys from the "Balance" tab will be used.*
+        -   **Important**: Ensure the API keys have trading permissions for the selected live environment if you intend to place orders. For "Futures Testnet", ensure you are using specific Futures Testnet API keys.
+    -   **Balance Total à Investir**: The total amount of capital you want to allocate for this DCA simulation (e.g., 1000 USDT).
+    -   **Prix d'entrée initial**: The price at which your first investment level is considered (e.g., 40000 for BTC).
+    -   **Prix catastrophique (seuil d'arrêt)**: The price threshold. The simulation calculates DCA levels down to this price.
+    -   **Pourcentage de drop par niveau (%)**: The percentage the price must drop from the *previous level's entry price* for a new DCA investment to occur (e.g., 10 for a 10% drop).
 2.  **Calculate Simulation**:
     -   Click the "**Calculer la Simulation**" button.
-3.  **View Results**:
-    -   The results will be displayed in the text area below the button.
+    -   The results, including the number of DCA levels, price per level, and amount/quantity per level, will be displayed in the text area.
+    -   If the calculation is successful, the "**Placer Ordres DCA (LIMIT BUY)**" button will become enabled.
+3.  **Placing Orders Based on Simulation (Optional)**:
+    -   **Verify all inputs** (Symbol, Environment on this tab, and API Keys on the Balance tab).
+    -   Click the "**Placer Ordres DCA (LIMIT BUY)**" button.
+    -   The application will attempt to place a series of LIMIT BUY orders based on the calculated simulation levels.
+    -   The results area will show the status of each order placement attempt.
+    -   **CAUTION**: This will place REAL orders if "Spot" or "Futures Live" is selected. Test with "Futures Testnet" first. See the "⚠️ Important Warnings and Risks ⚠️" section.
+4.  **View Results**:
+    -   The results of the calculation or order placement will be displayed in the text area below the buttons.
     -   This includes:
-        -   A summary of your input parameters.
+        -   A summary of your input parameters for calculation.
         -   The total number of DCA levels possible.
         -   The amount of capital to be invested at each level.
-        -   A detailed breakdown for each DCA level, showing the entry price and the quantity of the asset that can be bought with the allocated amount for that level.
-    -   If there are errors in your input (e.g., non-numeric values, invalid percentages), an error message will be shown in the results area.
+        -   A detailed breakdown for each DCA level: entry price and quantity.
+        -   Status of each order placed if the "Placer Ordres DCA" button was used.
+    -   If there are errors in your input or during API interaction, an error message will be shown.
 
 ## Running Unit Tests
 
@@ -201,3 +211,4 @@ To ensure the application logic for interacting with the Binance API is working 
 -   Always ensure your API keys are kept secure and have the minimum necessary permissions (read-only for this application, trading permissions if using the trade tab).
 -   The developers of this application are not responsible for any loss of funds, security breaches, or issues arising from its use.
 -   This tool is for informational purposes only and is not financial advice.
+```

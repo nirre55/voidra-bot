@@ -221,6 +221,16 @@ class Ui_MainWindow(object):
         self.simCalculerButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.simulationTabLayout.addLayout(self.simCalculerButtonLayout)
 
+        # Place DCA Orders Button
+        self.simPlaceDcaOrdersButton = QPushButton(ui_strings.BUTTON_PLACE_DCA_ORDERS) # Text from constant
+        self.simPlaceDcaOrdersButton.setObjectName("simPlaceDcaOrdersButton")
+        self.simPlaceDcaOrdersButton.setEnabled(False) # Initially disabled
+        # Center button
+        self.simPlaceDcaOrdersButtonLayout = QHBoxLayout()
+        self.simPlaceDcaOrdersButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.simPlaceDcaOrdersButtonLayout.addWidget(self.simPlaceDcaOrdersButton)
+        self.simPlaceDcaOrdersButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.simulationTabLayout.addLayout(self.simPlaceDcaOrdersButtonLayout)
 
         # Results Display Area
         self.simResultsTextEdit = QTextEdit()

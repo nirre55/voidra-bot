@@ -1,15 +1,18 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 
 from .ui_main_window import Ui_MainWindow
 from .app_logic import (BinanceLogic, ApiKeyMissingError, CustomNetworkError,
                         CustomExchangeError, AppLogicError, MarketEnvironment,
                         OrderPlacementError, InsufficientFundsError, InvalidOrderParamsError)
-from .constants import ui_strings, error_messages # Import constants
+from .constants import ui_strings, error_messages
 from .simulation_logic import calculer_iterations, SimulationError
+from . import keyring_utils
+import keyring # For keyring.get_keyring()
+import keyring.errors # For NoKeyringError
 
-class BalanceWorker(QThread): # Renamed from Worker
+class BalanceWorker(QThread):
     """
     Worker thread for handling Binance balance fetching without freezing the UI.
     """
@@ -21,7 +24,7 @@ class BalanceWorker(QThread): # Renamed from Worker
         self.binance_logic = binance_logic
         self.api_key = api_key
         self.secret_key = secret_key
-        self.market_environment = market_environment # Already correct
+        self.market_environment = market_environment
 
     def run(self):
         """
@@ -29,18 +32,12 @@ class BalanceWorker(QThread): # Renamed from Worker
         Emits 'success' with the balance or 'error' with a message.
         """
         try:
-            balance = self.binance_logic.get_balance(self.api_key, self.secret_key, self.market_environment) # Already correct
+            balance = self.binance_logic.get_balance(self.api_key, self.secret_key, self.market_environment)
             self.success.emit(balance)
-        except ApiKeyMissingError as e:
-            self.error.emit(str(e))
-        except CustomNetworkError as e:
-            self.error.emit(str(e))
-        except CustomExchangeError as e:
-            self.error.emit(str(e))
-        except AppLogicError as e:
+        except (ApiKeyMissingError, CustomNetworkError, CustomExchangeError, AppLogicError) as e:
             self.error.emit(str(e))
         except Exception as e:
-            self.error.emit(f"An unexpected error occurred in balance worker: {str(e)}")
+            self.error.emit(f"{error_messages.ERROR_UNEXPECTED}: {str(e)}")
 
 class OrderPlacementWorker(QThread):
     success = pyqtSignal(object)  # Emits the full order response dict
@@ -70,8 +67,8 @@ class OrderPlacementWorker(QThread):
         except (ApiKeyMissingError, InvalidOrderParamsError, InsufficientFundsError,
                 OrderPlacementError, CustomNetworkError, AppLogicError) as e:
             self.error.emit(str(e))
-        except Exception as e: # Catch any other unexpected error from logic or ccxt not caught by specific handlers
-            self.error.emit(f"An unexpected error occurred in order worker: {str(e)}")
+        except Exception as e:
+            self.error.emit(f"{error_messages.ERROR_UNEXPECTED}: {str(e)}")
 
 
 class BinanceAppPyQt(QMainWindow):
@@ -79,13 +76,29 @@ class BinanceAppPyQt(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.setStatusBar(QStatusBar(self)) # Add a status bar
 
         self.binance_logic = BinanceLogic()
         self.balance_worker_thread = None
         self.order_placement_worker_thread = None
+        self.keyring_available = True
+
+        # Keyring availability check and initial load
+        try:
+            keyring.get_keyring()
+            self.keyring_available = True
+            self.statusBar().showMessage(ui_strings.APP_NAME + ": Keyring initialisé.", 3000)
+        except keyring.errors.NoKeyringError:
+            self.keyring_available = False
+            self.ui.saveApiKeysCheckBox.setEnabled(False)
+            self.ui.saveApiKeysCheckBox.setToolTip(ui_strings.LABEL_KEYRING_UNAVAILABLE)
+            self.statusBar().showMessage(ui_strings.LABEL_KEYRING_UNAVAILABLE, 5000)
+            print(ui_strings.LABEL_KEYRING_UNAVAILABLE) # Console fallback
 
         # Connect signals for Balance Tab
         self.ui.fetchBalanceButton.clicked.connect(self.start_fetch_balance)
+        self.ui.balanceEnvironmentComboBox.currentTextChanged.connect(self._load_api_keys_for_selected_env)
+        self._load_api_keys_for_selected_env() # Load for initially selected env
 
         # Connect signals for Trade Tab
         self.ui.placeOrderButton.clicked.connect(self.start_place_order)
@@ -108,6 +121,35 @@ class BinanceAppPyQt(QMainWindow):
         return None
 
     @pyqtSlot()
+    def _load_api_keys_for_selected_env(self):
+        if not self.keyring_available:
+            self.ui.saveApiKeysCheckBox.setEnabled(False) # Ensure it's disabled if called before __init__ check fully completes
+            self.ui.saveApiKeysCheckBox.setChecked(False)
+            return
+
+        selected_env_text = self.ui.balanceEnvironmentComboBox.currentText()
+        market_env = self._get_selected_environment(selected_env_text)
+
+        if market_env:
+            api_key, secret_key = keyring_utils.load_creds(market_env.value)
+            if api_key and secret_key:
+                self.ui.apiKeyLineEdit.setText(api_key)
+                self.ui.secretKeyLineEdit.setText(secret_key)
+                self.ui.saveApiKeysCheckBox.setChecked(True)
+            else:
+                self.ui.apiKeyLineEdit.clear()
+                self.ui.secretKeyLineEdit.clear()
+                self.ui.saveApiKeysCheckBox.setChecked(False)
+            self.ui.saveApiKeysCheckBox.setEnabled(True) # Enable if keyring is available
+        else:
+            self.ui.apiKeyLineEdit.clear()
+            self.ui.secretKeyLineEdit.clear()
+            self.ui.saveApiKeysCheckBox.setChecked(False)
+            # Keep checkbox enabled if keyring is available, user might select a valid env next
+            self.ui.saveApiKeysCheckBox.setEnabled(self.keyring_available)
+
+
+    @pyqtSlot()
     def start_fetch_balance(self):
         api_key = self.ui.apiKeyLineEdit.text().strip()
         secret_key = self.ui.secretKeyLineEdit.text().strip()
@@ -122,6 +164,15 @@ class BinanceAppPyQt(QMainWindow):
         if not api_key or not secret_key:
             self.ui.balanceValueLabel.setText(error_messages.ERROR_API_KEYS_REQUIRED_UI)
             return
+
+        # Save or delete keys based on checkbox state FOR THE CURRENTLY SELECTED ENVIRONMENT
+        if self.keyring_available:
+            if self.ui.saveApiKeysCheckBox.isChecked():
+                if api_key and secret_key: # Don't save empty keys
+                    keyring_utils.save_creds(market_env.value, api_key, secret_key)
+            else:
+                # If unchecked, delete previously stored keys for this environment
+                keyring_utils.delete_creds(market_env.value)
 
         self.ui.fetchBalanceButton.setEnabled(False)
         self.ui.balanceValueLabel.setText(ui_strings.LABEL_LOADING)
@@ -148,10 +199,9 @@ class BinanceAppPyQt(QMainWindow):
         is_limit_order = order_type_text.upper() == ui_strings.ORDER_TYPE_LIMIT
         self.ui.priceLineEdit.setEnabled(is_limit_order)
 
-        # Find the QLabel associated with priceLineEdit in the QFormLayout
-        # self.ui.tradePriceLabel is now directly accessible
-        if hasattr(self.ui, 'tradePriceLabel'):
-            self.ui.tradePriceLabel.setEnabled(is_limit_order)
+        price_label_widget = self.ui.tradeFormLayout.labelForField(self.ui.priceLineEdit)
+        if price_label_widget: # price_label_widget is self.ui.tradePriceLabel
+            price_label_widget.setEnabled(is_limit_order)
 
         if not is_limit_order:
             self.ui.priceLineEdit.clear()
@@ -172,13 +222,12 @@ class BinanceAppPyQt(QMainWindow):
             self.ui.tradeStatusLabel.setText(error_messages.ERROR_INVALID_ENVIRONMENT_SELECTED)
             return
 
-        symbol = self.ui.tradeSymbolLineEdit.text().strip() # Corrected widget name
+        symbol = self.ui.tradeSymbolLineEdit.text().strip()
         order_type = self.ui.orderTypeComboBox.currentText()
         side = self.ui.sideComboBox.currentText()
         amount_str = self.ui.amountLineEdit.text().strip()
         price_str = self.ui.priceLineEdit.text().strip()
 
-        # Input Validation
         if not symbol:
             self.ui.tradeStatusLabel.setText(error_messages.ERROR_ORDER_SYMBOL_REQUIRED)
             return
@@ -186,7 +235,6 @@ class BinanceAppPyQt(QMainWindow):
         try:
             amount = float(amount_str)
             if amount <= 0:
-                # Using a more generic message that implies positivity, or a specific one if defined
                 self.ui.tradeStatusLabel.setText(error_messages.ERROR_ORDER_AMOUNT_POSITIVE)
                 return
         except ValueError:
@@ -195,7 +243,7 @@ class BinanceAppPyQt(QMainWindow):
 
         price = None
         if order_type.upper() == ui_strings.ORDER_TYPE_LIMIT:
-            if not price_str: # Check if price string is empty for LIMIT orders
+            if not price_str:
                 self.ui.tradeStatusLabel.setText(error_messages.ERROR_ORDER_PRICE_POSITIVE_LIMIT)
                 return
             try:
@@ -215,7 +263,7 @@ class BinanceAppPyQt(QMainWindow):
 
         self.order_placement_worker_thread = OrderPlacementWorker(
             self.binance_logic, api_key, secret_key, market_env,
-            symbol, order_type, side, amount, price # Pass validated amount and price
+            symbol, order_type, side, amount, price
         )
         self.order_placement_worker_thread.success.connect(self.on_place_order_success)
         self.order_placement_worker_thread.error.connect(self.on_place_order_error)
@@ -224,7 +272,6 @@ class BinanceAppPyQt(QMainWindow):
 
     @pyqtSlot(object)
     def on_place_order_success(self, order_response: dict):
-        # Construct success message using constants
         status_text = (f"{ui_strings.STATUS_ORDER_SUCCESS_PREFIX}{order_response.get('id', 'N/A')}"
                        f"{ui_strings.STATUS_ORDER_PARTIAL_INFO_SUFFIX}{order_response.get('status', 'N/A')}\n"
                        f"Symbol: {order_response.get('symbol')}, Side: {order_response.get('side')}, "
@@ -235,9 +282,7 @@ class BinanceAppPyQt(QMainWindow):
 
     @pyqtSlot(str)
     def on_place_order_error(self, error_message: str):
-        # Error messages from app_logic should now be using constants or be descriptive enough.
-        # If not, this is where you could map specific internal error codes/messages to user-friendly ones from error_messages.py
-        self.ui.tradeStatusLabel.setText(f"Erreur d'Ordre: {error_message}") # Generic prefix for now
+        self.ui.tradeStatusLabel.setText(f"Erreur d'Ordre: {error_message}")
 
     def closeEvent(self, event):
         """Ensure worker threads are properly handled on close."""
@@ -253,21 +298,11 @@ class BinanceAppPyQt(QMainWindow):
     @pyqtSlot()
     def handle_simulation_calculation(self):
         try:
-            # 1. Retrieve input values from QLineEdits
             balance_str = self.ui.simBalanceLineEdit.text().strip()
             prix_entree_str = self.ui.simPrixEntreeLineEdit.text().strip()
             prix_catastrophique_str = self.ui.simPrixCatastrophiqueLineEdit.text().strip()
             drop_percent_str = self.ui.simDropPercentLineEdit.text().strip()
 
-            # Symbol and Environment are selected but not used by calculer_iterations yet.
-            # sim_symbol = self.ui.simSymbolComboBox.currentText()
-            # sim_env_text = self.ui.simEnvironmentComboBox.currentText()
-            # sim_market_env = self._get_selected_environment(sim_env_text)
-            # if sim_market_env is None:
-            #     self.ui.simResultsTextEdit.setText(error_messages.ERROR_INVALID_ENVIRONMENT_SELECTED)
-            #     return
-
-            # 2. Validate and convert to float (basic validation)
             if not all([balance_str, prix_entree_str, prix_catastrophique_str, drop_percent_str]):
                 self.ui.simResultsTextEdit.setText(error_messages.ERROR_ALL_SIM_FIELDS_REQUIRED)
                 return
@@ -281,7 +316,6 @@ class BinanceAppPyQt(QMainWindow):
                 self.ui.simResultsTextEdit.setText(error_messages.ERROR_SIM_NUMERIC_INPUT)
                 return
 
-            # 3. Call the simulation logic function
             results_data = calculer_iterations(
                 balance=balance,
                 prix_entree=prix_entree,
@@ -289,12 +323,10 @@ class BinanceAppPyQt(QMainWindow):
                 drop_percent=drop_percent
             )
 
-            # 4. Format and display results
             formatted_results = "\n".join(results_data.get("details_text", []))
             self.ui.simResultsTextEdit.setText(formatted_results)
 
         except SimulationError as sim_e:
-            # SimulationError messages are already defined in simulation_logic and should be user-friendly
             self.ui.simResultsTextEdit.setText(f"Erreur de Simulation: {sim_e}")
         except Exception as e:
             self.ui.simResultsTextEdit.setText(f"{error_messages.ERROR_UNEXPECTED_SIM_ISSUE}: {e}")

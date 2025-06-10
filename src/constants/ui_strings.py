@@ -3,6 +3,7 @@
 # --- General ---
 WINDOW_TITLE = "Binance MultiApp"
 APP_NAME = "Binance MultiApp"
+APP_NAME_KEYRING = "BinanceMultiApp" # For Keyring Service Name
 
 # --- Tab Names ---
 TAB_BALANCE = "Balance"
@@ -26,6 +27,9 @@ LABEL_PRICE_LIMIT_ORDER = "Prix (pour ordre LIMIT):"
 LABEL_BALANCE_USDT = "Balance (USDT):"
 LABEL_BALANCE_DISPLAY_DEFAULT = "N/A"
 BUTTON_FETCH_BALANCE = "Récupérer la Balance"
+CHECKBOX_SAVE_API_KEYS = "Mémoriser les clés API pour cet environnement"
+LABEL_KEYRING_UNAVAILABLE = "Keyring non disponible. Les clés ne peuvent pas être sauvegardées/chargées."
+
 
 # --- Trade Tab ---
 BUTTON_PLACE_ORDER = "Placer l'Ordre"

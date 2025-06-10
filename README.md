@@ -21,11 +21,18 @@ This Python desktop application provides a graphical user interface (GUI) built 
 The project is organized into the following key files:
 
 -   `/src`: Contains the main application source code.
+    -   `__init__.py`: Makes `src` a Python package.
     -   `main_pyqt.py`: Main application script (PyQt5).
     -   `ui_main_window.py`: Defines the UI structure (PyQt5).
     -   `app_logic.py`: Handles application logic (Binance API interaction).
+    -   `simulation_logic.py`: Contains logic for the DCA simulation.
+    -   `constants/`: Stores application-wide constants.
+        -   `__init__.py`: Makes `constants` a Python package.
+        -   `ui_strings.py`: Constants for UI text elements (labels, buttons, etc.).
+        -   `error_messages.py`: Constants for user-facing error messages.
 -   `/tests`: Contains unit tests.
     -   `test_app_logic.py`: Unit tests for `app_logic.py`.
+    -   `test_simulation_logic.py`: Unit tests for `simulation_logic.py`.
 -   `README.md`: This file, providing information about the project.
 -   `requirements.txt`: Python dependencies.
 -   `.gitignore`: Specifies intentionally untracked files that Git should ignore.

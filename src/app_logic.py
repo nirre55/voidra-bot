@@ -1,5 +1,6 @@
 import ccxt
 import enum
+from .constants import error_messages, ui_strings # Added ui_strings for order types/sides
 
 # Market Environment Enum
 class MarketEnvironment(enum.Enum):
@@ -62,7 +63,7 @@ class BinanceLogic:
             AppLogicError: For any other unexpected errors during the process.
         """
         if not api_key or not secret_key:
-            raise ApiKeyMissingError("API Key and Secret Key are required.")
+            raise ApiKeyMissingError(error_messages.PARAM_API_KEYS_REQUIRED)
 
         try:
             exchange_config = {
@@ -116,17 +117,17 @@ class BinanceLogic:
                     amount: float,
                     price: float = None): # Price is optional, for MARKET orders
         if not api_key or not secret_key:
-            raise ApiKeyMissingError("API Key and Secret Key are required.")
+            raise ApiKeyMissingError(error_messages.PARAM_API_KEYS_REQUIRED)
         if not symbol:
-            raise InvalidOrderParamsError("Symbol is required.")
-        if order_type.upper() not in ["LIMIT", "MARKET"]:
-            raise InvalidOrderParamsError("Order type must be LIMIT or MARKET.")
-        if side.upper() not in ["BUY", "SELL"]:
-            raise InvalidOrderParamsError("Side must be BUY or SELL.")
+            raise InvalidOrderParamsError(error_messages.PARAM_SYMBOL_REQUIRED)
+        if order_type.upper() not in [ui_strings.ORDER_TYPE_LIMIT, ui_strings.ORDER_TYPE_MARKET]:
+            raise InvalidOrderParamsError(error_messages.PARAM_ORDER_TYPE_INVALID)
+        if side.upper() not in [ui_strings.SIDE_BUY, ui_strings.SIDE_SELL]:
+            raise InvalidOrderParamsError(error_messages.PARAM_SIDE_INVALID)
         if amount <= 0:
-            raise InvalidOrderParamsError("Amount must be positive.")
-        if order_type.upper() == "LIMIT" and (price is None or price <= 0):
-            raise InvalidOrderParamsError("Price must be positive for LIMIT orders.")
+            raise InvalidOrderParamsError(error_messages.PARAM_AMOUNT_MUST_BE_POSITIVE)
+        if order_type.upper() == ui_strings.ORDER_TYPE_LIMIT and (price is None or price <= 0):
+            raise InvalidOrderParamsError(error_messages.PARAM_PRICE_MUST_BE_POSITIVE_LIMIT)
 
         exchange_config = {
             'apiKey': api_key,
@@ -150,7 +151,7 @@ class BinanceLogic:
             ccxt_side = side.lower()
 
             final_price = None
-            if order_type.upper() == "LIMIT":
+            if order_type.upper() == ui_strings.ORDER_TYPE_LIMIT: # Use ui_strings constant
                 final_price = price
 
             # The 'params' argument can be used for non-standard parameters if needed.

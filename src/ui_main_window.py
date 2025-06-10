@@ -3,12 +3,13 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLa
                              QTabWidget, QComboBox, QFormLayout, QTextEdit) # Added QTextEdit
 from PyQt5.QtCore import QMetaObject, QCoreApplication, QRect
 from PyQt5.QtGui import QFont
+from .constants import ui_strings # Import ui_strings
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.setWindowTitle("Binance Balance & Trade Tool (PyQt)")
-        MainWindow.resize(500, 550) # Adjusted size for new tab
+        MainWindow.setWindowTitle(ui_strings.WINDOW_TITLE) # Use constant
+        MainWindow.resize(500, 550)
 
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName("centralWidget")
@@ -31,7 +32,7 @@ class Ui_MainWindow(object):
         # API Key Layout (moved to Balance Tab)
         self.apiKeyLayout = QHBoxLayout()
         self.apiKeyLayout.setObjectName("apiKeyLayout")
-        self.apiKeyLabel = QLabel("API Key:") # No need for self.balanceTab as parent, layout handles it
+        self.apiKeyLabel = QLabel(ui_strings.LABEL_API_KEY) # Use constant
         self.apiKeyLayout.addWidget(self.apiKeyLabel)
         self.apiKeyLineEdit = QLineEdit()
         self.apiKeyLayout.addWidget(self.apiKeyLineEdit)
@@ -40,7 +41,7 @@ class Ui_MainWindow(object):
         # Secret Key Layout (moved to Balance Tab)
         self.secretKeyLayout = QHBoxLayout()
         self.secretKeyLayout.setObjectName("secretKeyLayout")
-        self.secretKeyLabel = QLabel("Secret Key:")
+        self.secretKeyLabel = QLabel(ui_strings.LABEL_SECRET_KEY) # Use constant
         self.secretKeyLayout.addWidget(self.secretKeyLabel)
         self.secretKeyLineEdit = QLineEdit()
         self.secretKeyLineEdit.setEchoMode(QLineEdit.Password)
@@ -50,23 +51,21 @@ class Ui_MainWindow(object):
         # Environment ComboBox for Balance
         self.balanceEnvironmentComboBox = QComboBox(self.balanceTab)
         self.balanceEnvironmentComboBox.setObjectName("balanceEnvironmentComboBox")
-        self.balanceEnvironmentComboBox.addItem("Spot")
-        self.balanceEnvironmentComboBox.addItem("Futures Live")
-        self.balanceEnvironmentComboBox.addItem("Futures Testnet")
-        # Add to a QHBoxLayout for better alignment with a label if desired
+        self.balanceEnvironmentComboBox.addItems(ui_strings.ENVIRONMENT_CHOICES) # Use constant
         self.balanceEnvLayout = QHBoxLayout()
-        self.balanceEnvLayout.addWidget(QLabel("Environment:"))
+        self.balanceEnvLabel = QLabel(ui_strings.LABEL_ENVIRONMENT) # Use constant
+        self.balanceEnvLayout.addWidget(self.balanceEnvLabel)
         self.balanceEnvLayout.addWidget(self.balanceEnvironmentComboBox)
         self.balanceEnvLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.balanceTabLayout.addLayout(self.balanceEnvLayout)
 
 
         # Balance Display Layout (moved to Balance Tab)
-        self.balanceDisplayLayout = QHBoxLayout() # Renamed from self.balanceLayout
+        self.balanceDisplayLayout = QHBoxLayout()
         self.balanceDisplayLayout.setObjectName("balanceDisplayLayout")
-        self.balanceTextLabel = QLabel("Balance (USDT):")
+        self.balanceTextLabel = QLabel(ui_strings.LABEL_BALANCE_USDT) # Use constant
         self.balanceDisplayLayout.addWidget(self.balanceTextLabel)
-        self.balanceValueLabel = QLabel("N/A")
+        self.balanceValueLabel = QLabel(ui_strings.LABEL_BALANCE_DISPLAY_DEFAULT) # Use constant
         font = QFont()
         font.setBold(True)
         self.balanceValueLabel.setFont(font)
@@ -75,7 +74,7 @@ class Ui_MainWindow(object):
         self.balanceTabLayout.addLayout(self.balanceDisplayLayout)
 
         # Fetch Balance Button (moved to Balance Tab)
-        self.fetchBalanceButton = QPushButton("Fetch Balance") # Renamed from self.fetchButton
+        self.fetchBalanceButton = QPushButton(ui_strings.BUTTON_FETCH_BALANCE) # Use constant
         self.fetchBalanceButton.setObjectName("fetchBalanceButton")
         # Center button
         self.fetchBalanceButtonLayout = QHBoxLayout()
@@ -84,8 +83,8 @@ class Ui_MainWindow(object):
         self.fetchBalanceButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.balanceTabLayout.addLayout(self.fetchBalanceButtonLayout)
 
-        self.balanceTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)) # Spacer for balance tab
-        self.tabWidget.addTab(self.balanceTab, "Balance")
+        self.balanceTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.tabWidget.addTab(self.balanceTab, ui_strings.TAB_BALANCE) # Use constant
 
         # === Trade Tab ===
         self.tradeTab = QWidget()
@@ -99,44 +98,46 @@ class Ui_MainWindow(object):
         # Environment ComboBox for Trade
         self.tradeEnvironmentComboBox = QComboBox()
         self.tradeEnvironmentComboBox.setObjectName("tradeEnvironmentComboBox")
-        self.tradeEnvironmentComboBox.addItem("Spot")
-        self.tradeEnvironmentComboBox.addItem("Futures Live")
-        self.tradeEnvironmentComboBox.addItem("Futures Testnet")
-        self.tradeFormLayout.addRow(QLabel("Environment:"), self.tradeEnvironmentComboBox)
+        self.tradeEnvironmentComboBox.addItems(ui_strings.ENVIRONMENT_CHOICES) # Use constant
+        self.tradeEnvLabel = QLabel(ui_strings.LABEL_ENVIRONMENT)
+        self.tradeFormLayout.addRow(self.tradeEnvLabel, self.tradeEnvironmentComboBox)
 
-        # Symbol Input
-        self.symbolLineEdit = QLineEdit()
-        self.symbolLineEdit.setObjectName("symbolLineEdit")
-        self.tradeFormLayout.addRow(QLabel("Symbol (e.g., BTC/USDT):"), self.symbolLineEdit)
+        # Symbol Input for Trade tab - distinct from simSymbolComboBox
+        self.tradeSymbolLineEdit = QLineEdit()
+        self.tradeSymbolLineEdit.setObjectName("tradeSymbolLineEdit")
+        self.tradeSymbolLabel = QLabel(ui_strings.LABEL_SYMBOL)
+        self.tradeFormLayout.addRow(self.tradeSymbolLabel, self.tradeSymbolLineEdit)
 
         # Order Type ComboBox
         self.orderTypeComboBox = QComboBox()
         self.orderTypeComboBox.setObjectName("orderTypeComboBox")
-        self.orderTypeComboBox.addItem("LIMIT")
-        self.orderTypeComboBox.addItem("MARKET")
-        self.tradeFormLayout.addRow(QLabel("Order Type:"), self.orderTypeComboBox)
+        self.orderTypeComboBox.addItems(ui_strings.ORDER_TYPE_CHOICES) # Use constant
+        self.tradeOrderTypeLabel = QLabel(ui_strings.LABEL_ORDER_TYPE)
+        self.tradeFormLayout.addRow(self.tradeOrderTypeLabel, self.orderTypeComboBox)
 
         # Side ComboBox
         self.sideComboBox = QComboBox()
         self.sideComboBox.setObjectName("sideComboBox")
-        self.sideComboBox.addItem("BUY")
-        self.sideComboBox.addItem("SELL")
-        self.tradeFormLayout.addRow(QLabel("Side:"), self.sideComboBox)
+        self.sideComboBox.addItems(ui_strings.SIDE_CHOICES) # Use constant
+        self.tradeSideLabel = QLabel(ui_strings.LABEL_SIDE)
+        self.tradeFormLayout.addRow(self.tradeSideLabel, self.sideComboBox)
 
         # Amount Input
         self.amountLineEdit = QLineEdit()
         self.amountLineEdit.setObjectName("amountLineEdit")
-        self.tradeFormLayout.addRow(QLabel("Amount:"), self.amountLineEdit)
+        self.tradeAmountLabel = QLabel(ui_strings.LABEL_AMOUNT)
+        self.tradeFormLayout.addRow(self.tradeAmountLabel, self.amountLineEdit)
 
         # Price Input
         self.priceLineEdit = QLineEdit()
         self.priceLineEdit.setObjectName("priceLineEdit")
-        self.tradeFormLayout.addRow(QLabel("Price (for LIMIT orders):"), self.priceLineEdit)
+        self.tradePriceLabel = QLabel(ui_strings.LABEL_PRICE_LIMIT_ORDER)
+        self.tradeFormLayout.addRow(self.tradePriceLabel, self.priceLineEdit)
 
-        self.tradeTabLayout.addLayout(self.tradeFormLayout) # Add form layout to main trade tab layout
+        self.tradeTabLayout.addLayout(self.tradeFormLayout)
 
         # Place Order Button
-        self.placeOrderButton = QPushButton("Place Order")
+        self.placeOrderButton = QPushButton(ui_strings.BUTTON_PLACE_ORDER) # Use constant
         self.placeOrderButton.setObjectName("placeOrderButton")
         # Center button
         self.placeOrderButtonLayout = QHBoxLayout()
@@ -146,13 +147,13 @@ class Ui_MainWindow(object):
         self.tradeTabLayout.addLayout(self.placeOrderButtonLayout)
 
         # Trade Status Display
-        self.tradeStatusLabel = QLabel("Status: Ready")
+        self.tradeStatusLabel = QLabel(ui_strings.LABEL_STATUS_READY) # Use constant
         self.tradeStatusLabel.setObjectName("tradeStatusLabel")
         self.tradeStatusLabel.setWordWrap(True)
         self.tradeTabLayout.addWidget(self.tradeStatusLabel)
 
-        self.tradeTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)) # Spacer for trade tab
-        self.tabWidget.addTab(self.tradeTab, "Trade")
+        self.tradeTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.tabWidget.addTab(self.tradeTab, ui_strings.TAB_TRADE) # Use constant
 
         # === Simulation Tab ===
         self.simulationTab = QWidget()
@@ -164,39 +165,39 @@ class Ui_MainWindow(object):
         self.simulationFormLayout.setObjectName("simulationFormLayout")
 
         # Symbol ComboBox
-        self.simSymbolLabel = QLabel("Symbole:")
+        self.simSymbolLabel = QLabel(ui_strings.LABEL_SYMBOL)
         self.simSymbolComboBox = QComboBox()
         self.simSymbolComboBox.setObjectName("simSymbolComboBox")
-        self.simSymbolComboBox.addItems(["BTC/USDT", "ETH/USDT", "ADA/USDT", "SOL/USDT"]) # Added more examples
+        self.simSymbolComboBox.addItems(ui_strings.DEFAULT_SYMBOLS)
         self.simulationFormLayout.addRow(self.simSymbolLabel, self.simSymbolComboBox)
 
         # Environment ComboBox
-        self.simEnvironmentLabel = QLabel("Environnement:")
+        self.simEnvironmentLabel = QLabel(ui_strings.LABEL_ENVIRONMENT)
         self.simEnvironmentComboBox = QComboBox()
         self.simEnvironmentComboBox.setObjectName("simEnvironmentComboBox")
-        self.simEnvironmentComboBox.addItems(["Spot", "Futures Live", "Futures Testnet"]) # Consistent with other tabs
+        self.simEnvironmentComboBox.addItems(ui_strings.ENVIRONMENT_CHOICES)
         self.simulationFormLayout.addRow(self.simEnvironmentLabel, self.simEnvironmentComboBox)
 
         # Balance Input
-        self.simBalanceLabel = QLabel("Balance Total à Investir:")
+        self.simBalanceLabel = QLabel(ui_strings.LABEL_SIM_BALANCE)
         self.simBalanceLineEdit = QLineEdit()
         self.simBalanceLineEdit.setObjectName("simBalanceLineEdit")
         self.simulationFormLayout.addRow(self.simBalanceLabel, self.simBalanceLineEdit)
 
         # Prix d'entrée Input
-        self.simPrixEntreeLabel = QLabel("Prix d'entrée initial:")
+        self.simPrixEntreeLabel = QLabel(ui_strings.LABEL_SIM_PRIX_ENTREE)
         self.simPrixEntreeLineEdit = QLineEdit()
         self.simPrixEntreeLineEdit.setObjectName("simPrixEntreeLineEdit")
         self.simulationFormLayout.addRow(self.simPrixEntreeLabel, self.simPrixEntreeLineEdit)
 
         # Prix catastrophique Input
-        self.simPrixCatastrophiqueLabel = QLabel("Prix catastrophique (seuil d'arrêt):")
+        self.simPrixCatastrophiqueLabel = QLabel(ui_strings.LABEL_SIM_PRIX_CATASTROPHIQUE)
         self.simPrixCatastrophiqueLineEdit = QLineEdit()
         self.simPrixCatastrophiqueLineEdit.setObjectName("simPrixCatastrophiqueLineEdit")
         self.simulationFormLayout.addRow(self.simPrixCatastrophiqueLabel, self.simPrixCatastrophiqueLineEdit)
 
         # Pourcentage de drop Input
-        self.simDropPercentLabel = QLabel("Pourcentage de drop par niveau (%):")
+        self.simDropPercentLabel = QLabel(ui_strings.LABEL_SIM_DROP_PERCENT)
         self.simDropPercentLineEdit = QLineEdit()
         self.simDropPercentLineEdit.setObjectName("simDropPercentLineEdit")
         self.simulationFormLayout.addRow(self.simDropPercentLabel, self.simDropPercentLineEdit)
@@ -204,7 +205,7 @@ class Ui_MainWindow(object):
         self.simulationTabLayout.addLayout(self.simulationFormLayout)
 
         # Calculer Button
-        self.simCalculerButton = QPushButton("Calculer la Simulation")
+        self.simCalculerButton = QPushButton(ui_strings.BUTTON_CALCULATE_SIMULATION)
         self.simCalculerButton.setObjectName("simCalculerButton")
         # Center button
         self.simCalculerButtonLayout = QHBoxLayout()
@@ -219,9 +220,9 @@ class Ui_MainWindow(object):
         self.simResultsTextEdit.setObjectName("simResultsTextEdit")
         self.simResultsTextEdit.setReadOnly(True)
         self.simulationTabLayout.addWidget(self.simResultsTextEdit)
-        self.simulationTabLayout.setStretchFactor(self.simResultsTextEdit, 1) # Make QTextEdit expand
+        self.simulationTabLayout.setStretchFactor(self.simResultsTextEdit, 1)
 
-        self.tabWidget.addTab(self.simulationTab, "Simulation DCA")
+        self.tabWidget.addTab(self.simulationTab, ui_strings.TAB_SIMULATION_DCA) # Use constant
 
         # Add TabWidget to the main layout of the central widget
         self.mainLayout.addWidget(self.tabWidget)

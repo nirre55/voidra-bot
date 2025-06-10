@@ -1,4 +1,5 @@
 import math
+from .constants import error_messages
 
 class SimulationError(ValueError):
     """Custom exception for simulation errors."""
@@ -18,15 +19,15 @@ def calculer_iterations(balance: float, prix_entree: float, prix_catastrophique:
         A dictionary containing the simulation results or raises SimulationError.
     """
     if balance <= 0:
-        raise SimulationError("La balance doit être un nombre positif.")
+        raise SimulationError(error_messages.SIM_ERROR_BALANCE_POSITIVE)
     if prix_entree <= 0:
-        raise SimulationError("Le prix d'entrée doit être un nombre positif.")
+        raise SimulationError(error_messages.SIM_ERROR_PRIX_ENTREE_POSITIVE)
     if prix_catastrophique < 0: # Can be 0 if we want to allow going to zero
-        raise SimulationError("Le prix catastrophique ne peut pas être négatif.")
+        raise SimulationError(error_messages.SIM_ERROR_PRIX_CATASTROPHIQUE_NOT_NEGATIVE)
     if prix_entree <= prix_catastrophique:
-        raise SimulationError("Le prix d'entrée doit être supérieur au prix catastrophique.")
+        raise SimulationError(error_messages.SIM_ERROR_PRIX_ENTREE_MUST_BE_GREATER)
     if not (0 < drop_percent < 100):
-        raise SimulationError("Le pourcentage de drop doit être entre 0 et 100 (exclusif).")
+        raise SimulationError(error_messages.SIM_ERROR_DROP_PERCENT_RANGE)
 
     prix_actuel = prix_entree
     # iteration_count = 0 # Correctly count iterations passed
@@ -91,7 +92,7 @@ def calculer_iterations(balance: float, prix_entree: float, prix_catastrophique:
     if nombre_total_iterations == 0:
         # This case should be caught by "prix_entree <= prix_catastrophique" earlier,
         # but as a safeguard:
-        raise SimulationError("Aucune itération possible avec les paramètres donnés (le prix d'entrée est peut-être déjà inférieur ou égal au prix catastrophique).")
+        raise SimulationError(error_messages.SIM_ERROR_NO_ITERATIONS_POSSIBLE)
 
     montant_par_iteration = balance / nombre_total_iterations
     quantites_par_iteration = []

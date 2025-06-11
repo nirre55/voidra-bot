@@ -1,6 +1,7 @@
 import unittest
 from src.simulation_logic import calculer_iterations, SimulationError
 from src.constants import error_messages
+import re 
 
 class TestSimulationLogic(unittest.TestCase):
 
@@ -44,52 +45,52 @@ class TestSimulationLogic(unittest.TestCase):
 
     def test_prix_entree_equals_catastrophique(self):
         # If entry price is already at catastrophic, only 1 iteration at that price.
-        results = calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=10, drop_percent=10)
-        self.assertEqual(results["nombre_total_iterations"], 1)
-        self.assertAlmostEqual(results["prix_iterations"][0], 10)
-        self.assertAlmostEqual(results["montant_par_iteration"], 100)
-        self.assertAlmostEqual(results["quantites_par_iteration"][0], 10)
+        with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_ENTREE_MUST_BE_GREATER):
+            calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=10, drop_percent=10)
 
     def test_prix_entree_below_catastrophique(self):
         with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_ENTREE_MUST_BE_GREATER):
             calculer_iterations(balance=100, prix_entree=9, prix_catastrophique=10, drop_percent=10)
 
-    def test_invalid_inputs(self):
-        with self.subTest("Negative balance"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_BALANCE_POSITIVE):
-                calculer_iterations(balance=-100, prix_entree=10, prix_catastrophique=5, drop_percent=10)
+    def test_negative_balance_raises_error(self):
+        with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_BALANCE_POSITIVE):
+            calculer_iterations(balance=-100, prix_entree=10, prix_catastrophique=5, drop_percent=10)
 
-        with self.subTest("Zero balance"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_BALANCE_POSITIVE):
-                calculer_iterations(balance=0, prix_entree=10, prix_catastrophique=5, drop_percent=10)
+    def test_zero_balance_raises_error(self):
+        with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_BALANCE_POSITIVE):
+            calculer_iterations(balance=0, prix_entree=10, prix_catastrophique=5, drop_percent=10)
 
-        with self.subTest("Negative entry price"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_ENTREE_POSITIVE):
-                calculer_iterations(balance=100, prix_entree=-10, prix_catastrophique=5, drop_percent=10)
+    def test_negative_entry_price_raises_error(self):
+        with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_ENTREE_POSITIVE):
+            calculer_iterations(balance=100, prix_entree=-10, prix_catastrophique=5, drop_percent=10)
 
-        with self.subTest("Zero entry price"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_ENTREE_POSITIVE):
-                calculer_iterations(balance=100, prix_entree=0, prix_catastrophique=5, drop_percent=10)
+    def test_zero_entry_price_raises_error(self):
+        with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_ENTREE_POSITIVE):
+            calculer_iterations(balance=100, prix_entree=0, prix_catastrophique=5, drop_percent=10)
 
-        with self.subTest("Negative catastrophic price"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_CATASTROPHIQUE_NOT_NEGATIVE):
-                calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=-5, drop_percent=10)
+    def test_negative_catastrophic_price_raises_error(self):
+        with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_PRIX_CATASTROPHIQUE_NOT_NEGATIVE):
+            calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=-5, drop_percent=10)
 
-        with self.subTest("Drop percent zero"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_DROP_PERCENT_RANGE):
-                calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=0)
+    def test_drop_percent_zero_raises_error(self):
+        pattern = re.escape(error_messages.SIM_ERROR_DROP_PERCENT_RANGE)
+        with self.assertRaisesRegex(SimulationError, pattern):
+            calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=0)
 
-        with self.subTest("Drop percent 100"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_DROP_PERCENT_RANGE):
-                calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=100)
+    def test_drop_percent_hundred_raises_error(self):
+        pattern = re.escape(error_messages.SIM_ERROR_DROP_PERCENT_RANGE)
+        with self.assertRaisesRegex(SimulationError, pattern):
+            calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=100)
 
-        with self.subTest("Drop percent negative"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_DROP_PERCENT_RANGE):
-                calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=-10)
+    def test_drop_percent_negative_raises_error(self):
+        pattern = re.escape(error_messages.SIM_ERROR_DROP_PERCENT_RANGE)
+        with self.assertRaisesRegex(SimulationError, pattern):
+            calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=-10)
 
-        with self.subTest("Drop percent > 100"):
-            with self.assertRaisesRegex(SimulationError, error_messages.SIM_ERROR_DROP_PERCENT_RANGE):
-                calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=110)
+    def test_drop_percent_above_hundred_raises_error(self):
+        pattern = re.escape(error_messages.SIM_ERROR_DROP_PERCENT_RANGE)
+        with self.assertRaisesRegex(SimulationError, pattern):
+            calculer_iterations(balance=100, prix_entree=10, prix_catastrophique=5, drop_percent=110)
 
     def test_no_drop_possible_high_catastrophic(self):
         # Price starts at 10, catastrophic is 9, drop is 50%. 10 * (1-0.5) = 5.

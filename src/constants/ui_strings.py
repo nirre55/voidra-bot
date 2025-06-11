@@ -6,7 +6,7 @@ APP_NAME = "Binance MultiApp"
 APP_NAME_KEYRING = "BinanceMultiApp" # For Keyring Service Name
 
 # --- Tab Names ---
-TAB_BALANCE = "Balance"
+TAB_CONFIG = "Config" # Renamed from TAB_BALANCE
 TAB_TRADE = "Trade"
 TAB_SIMULATION_DCA = "Simulation DCA"
 

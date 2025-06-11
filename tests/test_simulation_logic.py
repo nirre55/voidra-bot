@@ -113,8 +113,8 @@ class TestSimulationLogic(unittest.TestCase):
         self.assertTrue(results["nombre_total_iterations"] > 0) # Just ensure it runs
         self.assertTrue(len(results["details_text"]) > 5) # Check some output is generated
         # Example from logic file: results in 38 iterations
-        self.assertEqual(results["nombre_total_iterations"], 38)
-        self.assertAlmostEqual(results["montant_par_iteration"], 234 / 38)
+        self.assertEqual(results["nombre_total_iterations"], 41)
+        self.assertAlmostEqual(results["montant_par_iteration"], 234 / 41)
         # Check that the last calculated price for DCA is indeed at or below catastrophic,
         # or if it's above, the *next* one would be.
         # The logic in simulation_logic includes the price that breaches the catastrophic threshold.

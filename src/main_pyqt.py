@@ -267,7 +267,7 @@ class BinanceAppPyQt(QMainWindow):
             self.ui.tradeStatusLabel.setText(error_messages.ERROR_API_KEYS_REQUIRED_UI + " (depuis l'onglet Balance)")
             return
 
-        trade_market_env_text = self.ui.tradeEnvironmentComboBox.currentText()
+        trade_market_env_text = self.ui.globalEnvironmentComboBox.currentText()
         market_env = self._get_selected_environment(trade_market_env_text)
 
         if market_env is None:

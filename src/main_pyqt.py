@@ -148,7 +148,7 @@ class BinanceAppPyQt(QMainWindow):
 
         # Connect signals for Balance Tab
         self.ui.fetchBalanceButton.clicked.connect(self.start_fetch_balance)
-        self.ui.balanceEnvironmentComboBox.currentTextChanged.connect(self._load_api_keys_for_selected_env)
+        self.ui.globalEnvironmentComboBox.currentTextChanged.connect(self._load_api_keys_for_selected_env)
         self._load_api_keys_for_selected_env()
 
         # Connect signals for Trade Tab
@@ -165,7 +165,6 @@ class BinanceAppPyQt(QMainWindow):
         self.ui.simPrixCatastrophiqueLineEdit.textChanged.connect(self._clear_dca_simulation_state)
         self.ui.simDropPercentLineEdit.textChanged.connect(self._clear_dca_simulation_state)
         self.ui.simSymbolComboBox.currentTextChanged.connect(self._clear_dca_simulation_state)
-        self.ui.simEnvironmentComboBox.currentTextChanged.connect(self._clear_dca_simulation_state)
 
     def _get_selected_environment(self, comboBox_current_text: str) -> MarketEnvironment | None:
         env_text = comboBox_current_text
@@ -184,7 +183,7 @@ class BinanceAppPyQt(QMainWindow):
             self.ui.saveApiKeysCheckBox.setChecked(False)
             return
 
-        selected_env_text = self.ui.balanceEnvironmentComboBox.currentText()
+        selected_env_text = self.ui.globalEnvironmentComboBox.currentText()
         market_env = self._get_selected_environment(selected_env_text)
 
         if market_env:
@@ -209,7 +208,7 @@ class BinanceAppPyQt(QMainWindow):
         api_key = self.ui.apiKeyLineEdit.text().strip()
         secret_key = self.ui.secretKeyLineEdit.text().strip()
 
-        market_env_text = self.ui.balanceEnvironmentComboBox.currentText()
+        market_env_text = self.ui.globalEnvironmentComboBox.currentText()
         market_env = self._get_selected_environment(market_env_text)
 
         if market_env is None:
@@ -416,7 +415,7 @@ class BinanceAppPyQt(QMainWindow):
             self.ui.simResultsTextEdit.append(ui_strings.DCA_API_KEYS_MISSING)
             return
 
-        sim_env_text = self.ui.simEnvironmentComboBox.currentText()
+        sim_env_text = self.ui.globalEnvironmentComboBox.currentText()
         market_env = self._get_selected_environment(sim_env_text)
         if market_env is None:
             self.ui.simResultsTextEdit.append(ui_strings.DCA_ENVIRONMENT_MISSING)
@@ -498,4 +497,3 @@ if __name__ == '__main__':
     mainWindow = BinanceAppPyQt()
     mainWindow.show()
     sys.exit(app.exec_())
->>>>>>> REPLACE

@@ -21,6 +21,7 @@ ERROR_ORDER_PRICE_INVALID_NUMBER = "Erreur: Prix invalide. Entrez un nombre." # 
 
 # From app_logic.ApiKeyMissingError (message is already part of the exception)
 # API_KEY_SECRET_REQUIRED = "API Key and Secret Key are required." # Defined in app_logic.py
+PARAM_API_KEYS_REQUIRED = "API Key et Secret Key sont requis."
 
 # From app_logic.InvalidOrderParamsError (some are specific in exception, these are from validation)
 PARAM_SYMBOL_REQUIRED = "Le symbole est requis."

@@ -3,6 +3,7 @@ import time # Required for BatchDcaOrderWorker
 import logging
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
+from typing import Optional
 
 from .ui_main_window import Ui_MainWindow
 from .app_logic import (BinanceLogic, ApiKeyMissingError, CustomNetworkError,
@@ -43,7 +44,7 @@ class OrderPlacementWorker(QThread):
 
     def __init__(self, binance_logic: BinanceLogic, api_key: str, secret_key: str,
                  market_environment: MarketEnvironment, symbol: str, order_type: str,
-                 side: str, amount: float, price: float = None, parent=None):
+                 side: str, amount: float, price: Optional[float] = None, parent=None):
         super().__init__(parent)
         self.binance_logic = binance_logic
         self.api_key = api_key
@@ -130,7 +131,8 @@ class BinanceAppPyQt(QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setStatusBar(QStatusBar(self))
+        self._status_bar = QStatusBar(self)
+        self.setStatusBar(self._status_bar)
 
         self.binance_logic = BinanceLogic()
         self.balance_worker_thread = None
@@ -142,12 +144,12 @@ class BinanceAppPyQt(QMainWindow):
         try:
             keyring.get_keyring()
             self.keyring_available = True
-            self.statusBar().showMessage(ui_strings.APP_NAME + ": Keyring initialisé.", 3000)
+            self._status_bar.showMessage(ui_strings.APP_NAME + ": Keyring initialisé.", 3000)
         except keyring.errors.NoKeyringError:
             self.keyring_available = False
             self.ui.saveApiKeysCheckBox.setEnabled(False)
             self.ui.saveApiKeysCheckBox.setToolTip(ui_strings.LABEL_KEYRING_UNAVAILABLE)
-            self.statusBar().showMessage(ui_strings.LABEL_KEYRING_UNAVAILABLE, 5000)
+            self._status_bar.showMessage(ui_strings.LABEL_KEYRING_UNAVAILABLE, 5000)
             logging.warning(ui_strings.LABEL_KEYRING_UNAVAILABLE)
 
         # Connect signals for Balance Tab
@@ -262,7 +264,7 @@ class BinanceAppPyQt(QMainWindow):
 
     @pyqtSlot(float)
     def on_fetch_success(self, balance: float):
-        self.ui.balanceValueLabel.setText(f"{balance:.2f} USDT")
+        self.ui.balanceValueLabel.setText(f"{round(balance, 2):.2f} USDT")
 
     @pyqtSlot(str)
     def on_fetch_error(self, error_message: str):
@@ -349,9 +351,9 @@ class BinanceAppPyQt(QMainWindow):
         status_text = (f"{ui_strings.STATUS_ORDER_SUCCESS_PREFIX}{order_response.get('id', 'N/A')}"
                        f"{ui_strings.STATUS_ORDER_PARTIAL_INFO_SUFFIX}{order_response.get('status', 'N/A')}\n"
                        f"Symbol: {order_response.get('symbol')}, Side: {order_response.get('side')}, "
-                       f"Amount: {order_response.get('amount')}")
+                       f"Amount: {round(float(order_response.get('amount', 0)), 2):.2f}")
         if order_response.get('price'):
-            status_text += f", Price: {order_response.get('price')}"
+            status_text += f", Price: {round(float(order_response.get('price', 0)), 2):.2f}"
         self.ui.tradeStatusLabel.setText(status_text)
 
     @pyqtSlot(str)
@@ -375,14 +377,12 @@ class BinanceAppPyQt(QMainWindow):
     def _load_dca_data_to_tab(self):
         self.ui.dcaSimResultsTextEdit.clear()
         if self.last_simulation_dca_levels:
-            current_sim_symbol = self.ui.simSymbolComboBox.currentText() # Get symbol from sim tab
+            current_sim_symbol = self.ui.simSymbolComboBox.currentText()
             self.ui.dcaSymbolValueLabel.setText(current_sim_symbol if current_sim_symbol else ui_strings.LABEL_DCA_SYMBOL_DEFAULT)
 
             self.ui.dcaSimResultsTextEdit.append(ui_strings.DCA_TAB_SIMULATION_DATA_HEADER + "\n")
             for i, level in enumerate(self.last_simulation_dca_levels):
-                # TODO: Use a more structured display, perhaps a QTableWidget in future. For now, text.
-                # Consider adding a ui_string for this format
-                level_text = f"Niveau {i+1}: Prix: {level['price']}, Montant: {level['amount']}"
+                level_text = f"Niveau {i+1}: Prix: {round(float(level['price']), 2):.2f}, Montant: {round(float(level['amount']), 2):.2f}"
                 self.ui.dcaSimResultsTextEdit.append(level_text)
 
             self.ui.dcaPlaceOrdersButton.setEnabled(True)

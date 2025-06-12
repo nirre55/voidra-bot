@@ -1,4 +1,6 @@
 import ccxt
+from ccxt.base.types import ConstructorArgs, OrderType, OrderSide
+from typing import Optional, Literal, cast
 import enum
 from .constants import error_messages, ui_strings # Added ui_strings for order types/sides
 
@@ -66,7 +68,7 @@ class BinanceLogic:
             raise ApiKeyMissingError(error_messages.PARAM_API_KEYS_REQUIRED)
 
         try:
-            exchange_config = {
+            exchange_config: ConstructorArgs = {
                 'apiKey': api_key,
                 'secret': secret_key,
                 'options': {'adjustForTimeDifference': True}
@@ -115,9 +117,9 @@ class BinanceLogic:
                     order_type: str, # e.g., 'LIMIT', 'MARKET'
                     side: str,       # e.g., 'BUY', 'SELL'
                     amount: float,
-                    price: float = None, # Price is optional, for MARKET orders
-                    margin_mode: str = None,
-                    leverage: int = None):
+                    price: Optional[float] = None, # Price is optional, for MARKET orders
+                    margin_mode: Optional[str] = None,
+                    leverage: Optional[int] = None):
         if not api_key or not secret_key:
             raise ApiKeyMissingError(error_messages.PARAM_API_KEYS_REQUIRED)
         if not symbol:
@@ -131,7 +133,7 @@ class BinanceLogic:
         if order_type.upper() == ui_strings.ORDER_TYPE_LIMIT and (price is None or price <= 0):
             raise InvalidOrderParamsError(error_messages.PARAM_PRICE_MUST_BE_POSITIVE_LIMIT)
 
-        exchange_config = {
+        exchange_config: ConstructorArgs = {
             'apiKey': api_key,
             'secret': secret_key,
             'options': {'adjustForTimeDifference': True}
@@ -190,8 +192,11 @@ class BinanceLogic:
                     pass # Or log a warning.
 
             # Prepare params for create_order
-            ccxt_order_type = order_type.lower()
-            ccxt_side = side.lower()
+            ccxt_order_type = cast(OrderType, order_type.lower())
+            ccxt_side = cast(OrderSide, side.lower())
+            
+            assert ccxt_order_type in ['limit', 'market'], f"Invalid order type: {ccxt_order_type}"
+            assert ccxt_side in ['buy', 'sell'], f"Invalid order side: {ccxt_side}"
 
             final_price = None
             if order_type.upper() == ui_strings.ORDER_TYPE_LIMIT: # Use ui_strings constant

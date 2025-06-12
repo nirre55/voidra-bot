@@ -1,5 +1,6 @@
 import sys
 import time # Required for BatchDcaOrderWorker
+import logging
 from PyQt5.QtWidgets import QApplication, QMainWindow, QStatusBar
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 
@@ -144,7 +145,7 @@ class BinanceAppPyQt(QMainWindow):
             self.ui.saveApiKeysCheckBox.setEnabled(False)
             self.ui.saveApiKeysCheckBox.setToolTip(ui_strings.LABEL_KEYRING_UNAVAILABLE)
             self.statusBar().showMessage(ui_strings.LABEL_KEYRING_UNAVAILABLE, 5000)
-            print(ui_strings.LABEL_KEYRING_UNAVAILABLE)
+            logging.warning(ui_strings.LABEL_KEYRING_UNAVAILABLE)
 
         # Connect signals for Balance Tab
         self.ui.fetchBalanceButton.clicked.connect(self.start_fetch_balance)

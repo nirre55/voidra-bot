@@ -9,6 +9,7 @@ APP_NAME_KEYRING = "BinanceMultiApp" # For Keyring Service Name
 TAB_CONFIG = "Config" # Renamed from TAB_BALANCE
 TAB_TRADE = "Trade"
 TAB_SIMULATION_DCA = "Simulation DCA"
+TAB_DCA_ORDERS = "Ordres DCA"
 
 # --- Common Labels & Texts ---
 LABEL_ENVIRONMENT = "Environnement:"
@@ -40,7 +41,22 @@ LABEL_SIM_PRIX_ENTREE = "Prix d'entrée initial:"
 LABEL_SIM_PRIX_CATASTROPHIQUE = "Prix catastrophique (seuil d'arrêt):"
 LABEL_SIM_DROP_PERCENT = "Pourcentage de drop par niveau (%):"
 BUTTON_CALCULATE_SIMULATION = "Calculer la Simulation"
-BUTTON_PLACE_DCA_ORDERS = "Placer Ordres DCA (LIMIT BUY)" # Text for the new button
+BUTTON_PLACE_DCA_ORDERS = "Placer Ordres DCA (LIMIT BUY)" # Text for the original button, might be removed or repurposed
+
+
+# --- DCA Orders Tab ---
+LABEL_DCA_SYMBOL = "Symbole:"
+LABEL_DCA_SYMBOL_DEFAULT = "N/A"
+BUTTON_PLACE_DCA_ORDERS_NEW_TAB = "Placer les Ordres DCA"
+BUTTON_LOAD_DCA_DATA = "Charger les Données de Simulation"
+LABEL_DCA_STATUS_READY = "Prêt. Chargez les données de simulation."
+LABEL_DCA_NO_SIMULATION_DATA_LOADED = "Aucune donnée de simulation n'est chargée. Veuillez exécuter une simulation et la charger ici."
+DCA_TAB_SIMULATION_DATA_HEADER = "Données de Simulation Chargées:"
+DCA_TAB_ORDERS_SUBMITTING = "Soumission des ordres DCA en cours..."
+DCA_TAB_ORDER_LEVEL_SUCCESS = "Niveau {level} ({symbol}): Ordre {order_id} placé avec succès. Statut: {status}"
+DCA_TAB_ORDER_LEVEL_ERROR = "Niveau {level} ({symbol}): Erreur lors du placement de l'ordre. Détail: {error}"
+DCA_TAB_BATCH_COMPLETE = "Traitement par lots des ordres DCA terminé."
+DCA_TAB_DATA_CLEARED = "Données de simulation effacées ou modifiées. Veuillez recharger."
 
 
 # --- ComboBox Choices ---
@@ -72,10 +88,11 @@ STATUS_ORDER_SUCCESS_PREFIX = "Ordre placé avec succès! ID: "
 STATUS_ORDER_PARTIAL_INFO_SUFFIX = ", Statut: "
 
 # --- Simulation Tab - DCA Order Placement Status Messages ---
-DCA_ORDER_SUBMITTING = "Soumission des ordres DCA en cours..."
-DCA_ORDER_LEVEL_SUCCESS = "Ordre DCA Niveau {level} ({symbol}): Succès - ID {order_id}, Statut: {status}"
-DCA_ORDER_LEVEL_ERROR = "Ordre DCA Niveau {level} ({symbol}): Erreur - {error}"
-DCA_BATCH_COMPLETE = "Traitement du lot d'ordres DCA terminé."
+# These might be reused or moved to a more general DCA section if applicable
+DCA_ORDER_SUBMITTING = "Soumission des ordres DCA en cours..." # Already exists, could be reused
+DCA_ORDER_LEVEL_SUCCESS = "Ordre DCA Niveau {level} ({symbol}): Succès - ID {order_id}, Statut: {status}" # Already exists
+DCA_ORDER_LEVEL_ERROR = "Ordre DCA Niveau {level} ({symbol}): Erreur - {error}" # Already exists
+DCA_BATCH_COMPLETE = "Traitement du lot d'ordres DCA terminé." # Already exists
 DCA_NO_SIMULATION_RESULTS = "Erreur: Aucune donnée de simulation valide à utiliser. Veuillez d'abord calculer une simulation."
 DCA_API_KEYS_MISSING = "Erreur: Clés API non fournies dans l'onglet Balance." # Or use existing general API key error
 DCA_SYMBOL_MISSING = "Erreur: Symbole non sélectionné dans l'onglet Simulation pour le placement d'ordres DCA."

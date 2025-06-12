@@ -202,16 +202,6 @@ class Ui_MainWindow(object):
         self.simCalculerButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.simulationTabLayout.addLayout(self.simCalculerButtonLayout)
 
-        # Place DCA Orders Button
-        self.simPlaceDcaOrdersButton = QPushButton(ui_strings.BUTTON_PLACE_DCA_ORDERS, self.simulationTab)
-        self.simPlaceDcaOrdersButton.setObjectName("simPlaceDcaOrdersButton")
-        self.simPlaceDcaOrdersButton.setEnabled(False)
-        self.simPlaceDcaOrdersButtonLayout = QHBoxLayout()
-        self.simPlaceDcaOrdersButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
-        self.simPlaceDcaOrdersButtonLayout.addWidget(self.simPlaceDcaOrdersButton)
-        self.simPlaceDcaOrdersButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
-        self.simulationTabLayout.addLayout(self.simPlaceDcaOrdersButtonLayout)
-
         # Results Display Area
         self.simResultsTextEdit = QTextEdit(self.simulationTab)
         self.simResultsTextEdit.setObjectName("simResultsTextEdit")
@@ -221,6 +211,57 @@ class Ui_MainWindow(object):
 
         self.tabWidget.addTab(self.simulationTab, ui_strings.TAB_SIMULATION_DCA)
 
+        # === DCA Orders Tab ===
+        self.dcaOrdersTab = QWidget()
+        self.dcaOrdersTab.setObjectName("dcaOrdersTab")
+        self.dcaOrdersTabLayout = QVBoxLayout(self.dcaOrdersTab)
+        self.dcaOrdersTabLayout.setObjectName("dcaOrdersTabLayout")
+
+        # Symbol Display Layout
+        self.dcaSymbolDisplayLayout = QHBoxLayout()
+        self.dcaSymbolDisplayLayout.setObjectName("dcaSymbolDisplayLayout")
+        self.dcaSymbolDisplayLabel = QLabel("Symbol:", self.dcaOrdersTab) # Placeholder, use ui_strings later
+        self.dcaSymbolDisplayLayout.addWidget(self.dcaSymbolDisplayLabel)
+        self.dcaSymbolValueLabel = QLabel("N/A", self.dcaOrdersTab) # Placeholder, to be updated
+        self.dcaSymbolDisplayLayout.addWidget(self.dcaSymbolValueLabel)
+        self.dcaSymbolDisplayLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.dcaOrdersTabLayout.addLayout(self.dcaSymbolDisplayLayout)
+
+        # Load Data Button
+        self.dcaLoadDataButton = QPushButton(ui_strings.BUTTON_LOAD_DCA_DATA, self.dcaOrdersTab) # Text from ui_strings
+        self.dcaLoadDataButton.setObjectName("dcaLoadDataButton")
+        # Center the button - create a layout for it
+        self.dcaLoadDataButtonLayout = QHBoxLayout()
+        self.dcaLoadDataButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.dcaLoadDataButtonLayout.addWidget(self.dcaLoadDataButton)
+        self.dcaLoadDataButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.dcaOrdersTabLayout.addLayout(self.dcaLoadDataButtonLayout)
+
+        # Simulation Data Display
+        self.dcaSimResultsTextEdit = QTextEdit(self.dcaOrdersTab)
+        self.dcaSimResultsTextEdit.setObjectName("dcaSimResultsTextEdit")
+        self.dcaSimResultsTextEdit.setReadOnly(True)
+        self.dcaOrdersTabLayout.addWidget(self.dcaSimResultsTextEdit)
+
+        # Place DCA Orders Button
+        self.dcaPlaceOrdersButton = QPushButton("Place DCA Orders", self.dcaOrdersTab) # Placeholder, use ui_strings later
+        self.dcaPlaceOrdersButton.setObjectName("dcaPlaceOrdersButton")
+        self.dcaPlaceOrdersButton.setEnabled(False)
+        self.dcaPlaceOrdersButtonLayout = QHBoxLayout()
+        self.dcaPlaceOrdersButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.dcaPlaceOrdersButtonLayout.addWidget(self.dcaPlaceOrdersButton)
+        self.dcaPlaceOrdersButtonLayout.addSpacerItem(QSpacerItem(40,20,QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.dcaOrdersTabLayout.addLayout(self.dcaPlaceOrdersButtonLayout)
+
+        # Status Label
+        self.dcaStatusLabel = QLabel("Status: Ready", self.dcaOrdersTab) # Placeholder, use ui_strings later
+        self.dcaStatusLabel.setObjectName("dcaStatusLabel")
+        self.dcaStatusLabel.setWordWrap(True)
+        self.dcaOrdersTabLayout.addWidget(self.dcaStatusLabel)
+
+        self.dcaOrdersTabLayout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.tabWidget.addTab(self.dcaOrdersTab, "DCA Orders") # Placeholder, use ui_strings later
+
         self.mainLayout.addWidget(self.tabWidget)
 
         self.retranslateUi(MainWindow)
@@ -229,6 +270,8 @@ class Ui_MainWindow(object):
         # _translate = QCoreApplication.translate # Not strictly needed if all texts are set by constants
         # Texts are set directly using ui_strings in setupUi.
         # If internationalization with QTranslator is added later, this method would be used.
+        # For now, ensure the new tab title is also set via ui_strings or directly if not yet in constants
+        # self.tabWidget.setTabText(self.tabWidget.indexOf(self.dcaOrdersTab), _translate("MainWindow", "DCA Orders")) # Example
         pass
 
 

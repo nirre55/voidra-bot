@@ -159,7 +159,24 @@ class BinanceAppPyQt(QMainWindow):
 
         # Connect signals for Simulation Tab
         self.ui.simCalculerButton.clicked.connect(self.handle_simulation_calculation)
-        self.ui.simPlaceDcaOrdersButton.clicked.connect(self.start_place_dca_orders)
+        # self.ui.simPlaceDcaOrdersButton.clicked.connect(self.start_place_dca_orders) # Button removed from UI
+
+        # Connect signals for DCA Orders Tab
+        self.ui.tabWidget.setTabText(self.ui.tabWidget.indexOf(self.ui.dcaOrdersTab), ui_strings.TAB_DCA_ORDERS)
+        self.ui.dcaSymbolDisplayLabel.setText(ui_strings.LABEL_DCA_SYMBOL) # Already set in ui_strings but good practice
+        self.ui.dcaSymbolValueLabel.setText(ui_strings.LABEL_DCA_SYMBOL_DEFAULT)
+        self.ui.dcaPlaceOrdersButton.setText(ui_strings.BUTTON_PLACE_DCA_ORDERS_NEW_TAB)
+        self.ui.dcaStatusLabel.setText(ui_strings.LABEL_DCA_STATUS_READY)
+        self.ui.dcaLoadDataButton.setText(ui_strings.BUTTON_LOAD_DCA_DATA) # Ensure text is set if not by ui_strings in .ui
+
+        self.ui.dcaLoadDataButton.clicked.connect(self._load_dca_data_to_tab)
+        self.ui.dcaPlaceOrdersButton.clicked.connect(self.start_place_dca_orders_from_dca_tab)
+
+        # Initial states for DCA Orders Tab
+        self.ui.dcaPlaceOrdersButton.setEnabled(False)
+        self.ui.dcaSimResultsTextEdit.setText(ui_strings.LABEL_DCA_NO_SIMULATION_DATA_LOADED)
+        self.ui.dcaSymbolValueLabel.setText(ui_strings.LABEL_DCA_SYMBOL_DEFAULT)
+
 
         self.ui.simBalanceLineEdit.textChanged.connect(self._clear_dca_simulation_state)
         self.ui.simPrixEntreeLineEdit.textChanged.connect(self._clear_dca_simulation_state)
@@ -339,13 +356,38 @@ class BinanceAppPyQt(QMainWindow):
 
     @pyqtSlot()
     def _clear_dca_simulation_state(self):
-        if self.last_simulation_dca_levels is not None: # Check if it was actually populated
+        # Clear data related to the simulation calculation
+        if self.last_simulation_dca_levels is not None:
             self.last_simulation_dca_levels = None
-            self.ui.simPlaceDcaOrdersButton.setEnabled(False)
-            # Optionally, you can append a message to simResultsTextEdit,
-            # but it might be better to clear it or just disable the button silently.
-            # self.ui.simResultsTextEdit.append("\nParamètres de simulation ou sélection modifiés. Recalculez pour activer le placement d'ordres DCA.")
+            # self.ui.simPlaceDcaOrdersButton.setEnabled(False) # Button is removed
 
+        # Update DCA Orders Tab UI to reflect cleared/invalidated data
+        self.ui.dcaSymbolValueLabel.setText(ui_strings.LABEL_DCA_SYMBOL_DEFAULT)
+        self.ui.dcaSimResultsTextEdit.setText(ui_strings.DCA_TAB_DATA_CLEARED) # Or NO_SIMULATION_DATA_LOADED
+        self.ui.dcaPlaceOrdersButton.setEnabled(False)
+        self.ui.dcaStatusLabel.setText(ui_strings.DCA_TAB_DATA_CLEARED) # Or a general ready status if preferred
+
+    @pyqtSlot()
+    def _load_dca_data_to_tab(self):
+        self.ui.dcaSimResultsTextEdit.clear()
+        if self.last_simulation_dca_levels:
+            current_sim_symbol = self.ui.simSymbolComboBox.currentText() # Get symbol from sim tab
+            self.ui.dcaSymbolValueLabel.setText(current_sim_symbol if current_sim_symbol else ui_strings.LABEL_DCA_SYMBOL_DEFAULT)
+
+            self.ui.dcaSimResultsTextEdit.append(ui_strings.DCA_TAB_SIMULATION_DATA_HEADER + "\n")
+            for i, level in enumerate(self.last_simulation_dca_levels):
+                # TODO: Use a more structured display, perhaps a QTableWidget in future. For now, text.
+                # Consider adding a ui_string for this format
+                level_text = f"Niveau {i+1}: Prix: {level['price']}, Montant: {level['amount']}"
+                self.ui.dcaSimResultsTextEdit.append(level_text)
+
+            self.ui.dcaPlaceOrdersButton.setEnabled(True)
+            self.ui.dcaStatusLabel.setText(ui_strings.LABEL_DCA_STATUS_READY)
+        else:
+            self.ui.dcaSymbolValueLabel.setText(ui_strings.LABEL_DCA_SYMBOL_DEFAULT)
+            self.ui.dcaSimResultsTextEdit.setText(ui_strings.LABEL_DCA_NO_SIMULATION_DATA_LOADED)
+            self.ui.dcaPlaceOrdersButton.setEnabled(False)
+            self.ui.dcaStatusLabel.setText(ui_strings.LABEL_DCA_NO_SIMULATION_DATA_LOADED)
 
     @pyqtSlot()
     def handle_simulation_calculation(self):
@@ -389,93 +431,108 @@ class BinanceAppPyQt(QMainWindow):
                         'price': results_data['prix_iterations'][i],
                         'amount': results_data['quantites_par_iteration'][i]
                     })
-                if self.last_simulation_dca_levels:
-                    self.ui.simPlaceDcaOrdersButton.setEnabled(True)
+                # self.ui.simPlaceDcaOrdersButton.setEnabled(True) # Button removed
+                # Automatically load to DCA tab if it's the current tab, or user can click "Load"
+                # For now, let's rely on the explicit button press.
+                # if self.ui.tabWidget.currentWidget() == self.ui.dcaOrdersTab:
+                #    self._load_dca_data_to_tab()
             else:
-                # This path should ideally not be hit if calculer_iterations raises SimulationError for no iterations
                 self.last_simulation_dca_levels = None
-                self.ui.simPlaceDcaOrdersButton.setEnabled(False)
+                # self.ui.simPlaceDcaOrdersButton.setEnabled(False) # Button removed
 
         except SimulationError as sim_e:
             self.ui.simResultsTextEdit.setText(f"Erreur de Simulation: {sim_e}")
-            self.ui.simPlaceDcaOrdersButton.setEnabled(False) # Ensure button is disabled on error
+            # self.ui.simPlaceDcaOrdersButton.setEnabled(False) # Button removed
         except Exception as e:
             self.ui.simResultsTextEdit.setText(f"{error_messages.ERROR_UNEXPECTED_SIM_ISSUE}: {e}")
-            self.ui.simPlaceDcaOrdersButton.setEnabled(False) # Ensure button is disabled on error
+            # self.ui.simPlaceDcaOrdersButton.setEnabled(False) # Button removed
             # import traceback
             # print(traceback.format_exc()) # For debugging
 
     @pyqtSlot()
-    def start_place_dca_orders(self):
-        self.ui.simResultsTextEdit.append("\n" + ui_strings.DCA_ORDER_SUBMITTING)
+    def start_place_dca_orders_from_dca_tab(self):
+        self.ui.dcaStatusLabel.setText(ui_strings.DCA_TAB_ORDERS_SUBMITTING)
+        self.ui.dcaSimResultsTextEdit.append("\n" + ui_strings.DCA_TAB_ORDERS_SUBMITTING) # Log in text area as well
 
         api_key = self.ui.apiKeyLineEdit.text().strip()
         secret_key = self.ui.secretKeyLineEdit.text().strip()
 
         if not api_key or not secret_key:
-            self.ui.simResultsTextEdit.append(ui_strings.DCA_API_KEYS_MISSING)
+            err_msg = error_messages.ERROR_API_KEYS_REQUIRED_UI + " (depuis l'onglet Config)"
+            self.ui.dcaStatusLabel.setText(err_msg)
+            self.ui.dcaSimResultsTextEdit.append(err_msg)
             return
 
-        sim_env_text = self.ui.globalEnvironmentComboBox.currentText()
-        market_env = self._get_selected_environment(sim_env_text)
+        dca_tab_env_text = self.ui.globalEnvironmentComboBox.currentText() # Use global env for DCA orders
+        market_env = self._get_selected_environment(dca_tab_env_text)
         if market_env is None:
-            self.ui.simResultsTextEdit.append(ui_strings.DCA_ENVIRONMENT_MISSING)
+            err_msg = error_messages.ERROR_INVALID_ENVIRONMENT_SELECTED
+            self.ui.dcaStatusLabel.setText(err_msg)
+            self.ui.dcaSimResultsTextEdit.append(err_msg)
             return
 
-        sim_symbol = self.ui.simSymbolComboBox.currentText()
-        if not sim_symbol:
-            self.ui.simResultsTextEdit.append(ui_strings.DCA_SYMBOL_MISSING)
+        dca_symbol = self.ui.dcaSymbolValueLabel.text()
+        if not dca_symbol or dca_symbol == ui_strings.LABEL_DCA_SYMBOL_DEFAULT:
+            err_msg = error_messages.ERROR_ORDER_SYMBOL_REQUIRED # Or a more specific one for DCA tab
+            self.ui.dcaStatusLabel.setText(err_msg)
+            self.ui.dcaSimResultsTextEdit.append(err_msg)
             return
 
         if not self.last_simulation_dca_levels:
-            self.ui.simResultsTextEdit.append(ui_strings.DCA_NO_SIMULATION_RESULTS)
+            err_msg = ui_strings.LABEL_DCA_NO_SIMULATION_DATA_LOADED
+            self.ui.dcaStatusLabel.setText(err_msg)
+            self.ui.dcaSimResultsTextEdit.append(err_msg)
             return
 
-        self.ui.simPlaceDcaOrdersButton.setEnabled(False)
+        self.ui.dcaPlaceOrdersButton.setEnabled(False)
 
         if self.batch_dca_worker_thread and self.batch_dca_worker_thread.isRunning():
-            self.ui.simResultsTextEdit.append("Un lot d'ordres DCA est déjà en cours.")
-            self.ui.simPlaceDcaOrdersButton.setEnabled(True) # Re-enable if we don't start a new one
+            # This message could also go to dcaSimResultsTextEdit
+            self.ui.dcaStatusLabel.setText("Un lot d'ordres DCA est déjà en cours.")
+            self.ui.dcaPlaceOrdersButton.setEnabled(True)
             return
 
         self.batch_dca_worker_thread = BatchDcaOrderWorker(
             self.binance_logic, api_key, secret_key, market_env,
-            sim_symbol, self.last_simulation_dca_levels
+            dca_symbol, self.last_simulation_dca_levels
         )
-        self.batch_dca_worker_thread.order_attempt_finished.connect(self._on_dca_order_attempt_finished)
-        self.batch_dca_worker_thread.batch_processing_finished.connect(self._on_dca_batch_finished)
+        self.batch_dca_worker_thread.order_attempt_finished.connect(self._on_dca_tab_order_attempt_finished)
+        self.batch_dca_worker_thread.batch_processing_finished.connect(self._on_dca_tab_batch_finished)
         self.batch_dca_worker_thread.start()
 
     @pyqtSlot(int, str, bool, object)
-    def _on_dca_order_attempt_finished(self, level_idx, symbol, success, result_obj):
+    def _on_dca_tab_order_attempt_finished(self, level_idx, symbol, success, result_obj):
         if success:
             order_response = result_obj
-            msg = ui_strings.DCA_ORDER_LEVEL_SUCCESS.format(
+            msg = ui_strings.DCA_TAB_ORDER_LEVEL_SUCCESS.format(
                 level=level_idx + 1,
                 symbol=symbol,
-                order_id=order_response.get('id', 'N/A'),
+                order_id=order_response.get('id', 'N/A'), # Use .get for safety
                 status=order_response.get('status', 'N/A')
             )
         else:
             error_detail = str(result_obj)
-            msg = ui_strings.DCA_ORDER_LEVEL_ERROR.format(
+            msg = ui_strings.DCA_TAB_ORDER_LEVEL_ERROR.format(
                 level=level_idx + 1,
                 symbol=symbol,
                 error=error_detail
             )
-        self.ui.simResultsTextEdit.append(msg)
-        cursor = self.ui.simResultsTextEdit.textCursor()
+        self.ui.dcaSimResultsTextEdit.append(msg)
+        self.ui.dcaStatusLabel.setText(msg) # Update status label with the latest attempt
+        cursor = self.ui.dcaSimResultsTextEdit.textCursor()
         cursor.movePosition(cursor.End)
-        self.ui.simResultsTextEdit.setTextCursor(cursor)
+        self.ui.dcaSimResultsTextEdit.setTextCursor(cursor)
 
     @pyqtSlot(str)
-    def _on_dca_batch_finished(self, summary_message):
-        self.ui.simResultsTextEdit.append(f"\n{summary_message}")
-        self.ui.simPlaceDcaOrdersButton.setEnabled(True)
-        self.batch_dca_worker_thread = None
-        cursor = self.ui.simResultsTextEdit.textCursor()
+    def _on_dca_tab_batch_finished(self, summary_message):
+        final_msg = f"{ui_strings.DCA_TAB_BATCH_COMPLETE} {summary_message}"
+        self.ui.dcaSimResultsTextEdit.append(f"\n{final_msg}")
+        self.ui.dcaStatusLabel.setText(final_msg)
+        self.ui.dcaPlaceOrdersButton.setEnabled(True)
+        self.batch_dca_worker_thread = None # Clear the thread reference
+        cursor = self.ui.dcaSimResultsTextEdit.textCursor()
         cursor.movePosition(cursor.End)
-        self.ui.simResultsTextEdit.setTextCursor(cursor)
+        self.ui.dcaSimResultsTextEdit.setTextCursor(cursor)
 
     def closeEvent(self, event):
         """Ensure worker threads are properly handled on close."""

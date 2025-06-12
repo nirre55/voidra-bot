@@ -73,7 +73,7 @@ class BatchDcaOrderWorker(QThread):
     batch_processing_finished = pyqtSignal(str)
 
     def __init__(self, binance_logic, api_key, secret_key, market_env,
-                 symbol_str, dca_levels_data, parent=None):
+                 symbol_str, dca_levels_data, margin_mode: str, leverage: int, parent=None):
         super().__init__(parent)
         self.binance_logic = binance_logic
         self.api_key = api_key
@@ -81,6 +81,8 @@ class BatchDcaOrderWorker(QThread):
         self.market_env = market_env
         self.symbol_str = symbol_str
         self.dca_levels_data = dca_levels_data # List of {'price': p, 'amount': q}
+        self.margin_mode = margin_mode
+        self.leverage = leverage
         self._is_running = True
 
     def run(self):
@@ -104,9 +106,10 @@ class BatchDcaOrderWorker(QThread):
                 continue
             try:
                 order_response = self.binance_logic.place_order(
-                    self.api_key, self.secret_key, self.market_env,
-                    self.symbol_str, ui_strings.ORDER_TYPE_LIMIT, ui_strings.SIDE_BUY, # Assuming DCA is LIMIT BUY
-                    amount, price
+                    api_key=self.api_key, secret_key=self.secret_key, market_environment=self.market_env,
+                    symbol=self.symbol_str, order_type=ui_strings.ORDER_TYPE_LIMIT, side=ui_strings.SIDE_BUY, # Assuming DCA is LIMIT BUY
+                    amount=amount, price=price,
+                    margin_mode=self.margin_mode, leverage=self.leverage # Pass new params
                 )
                 self.order_attempt_finished.emit(i, self.symbol_str, True, order_response)
             except Exception as e:
@@ -176,6 +179,7 @@ class BinanceAppPyQt(QMainWindow):
         self.ui.dcaPlaceOrdersButton.setEnabled(False)
         self.ui.dcaSimResultsTextEdit.setText(ui_strings.LABEL_DCA_NO_SIMULATION_DATA_LOADED)
         self.ui.dcaSymbolValueLabel.setText(ui_strings.LABEL_DCA_SYMBOL_DEFAULT)
+        self.ui.dcaLeverageLineEdit.setText("20") # Default leverage
 
 
         self.ui.simBalanceLineEdit.textChanged.connect(self._clear_dca_simulation_state)
@@ -454,6 +458,30 @@ class BinanceAppPyQt(QMainWindow):
         self.ui.dcaStatusLabel.setText(ui_strings.DCA_TAB_ORDERS_SUBMITTING)
         self.ui.dcaSimResultsTextEdit.append("\n" + ui_strings.DCA_TAB_ORDERS_SUBMITTING) # Log in text area as well
 
+        # Get and validate Margin Mode and Leverage first
+        margin_mode_str = self.ui.dcaMergeModeComboBox.currentText()
+        leverage_str = self.ui.dcaLeverageLineEdit.text().strip()
+        leverage_int = 0
+
+        if not leverage_str:
+            self.ui.dcaStatusLabel.setText(ui_strings.ERROR_LEVERAGE_INVALID_NUMBER) # Or "Leverage required"
+            self.ui.dcaSimResultsTextEdit.append(ui_strings.ERROR_LEVERAGE_INVALID_NUMBER)
+            self.ui.dcaPlaceOrdersButton.setEnabled(True)
+            return
+        try:
+            leverage_int = int(leverage_str)
+        except ValueError:
+            self.ui.dcaStatusLabel.setText(ui_strings.ERROR_LEVERAGE_INVALID_NUMBER)
+            self.ui.dcaSimResultsTextEdit.append(ui_strings.ERROR_LEVERAGE_INVALID_NUMBER)
+            self.ui.dcaPlaceOrdersButton.setEnabled(True)
+            return
+
+        if not (1 <= leverage_int <= 100): # Assuming range 1-100
+            self.ui.dcaStatusLabel.setText(ui_strings.ERROR_LEVERAGE_OUT_OF_RANGE)
+            self.ui.dcaSimResultsTextEdit.append(ui_strings.ERROR_LEVERAGE_OUT_OF_RANGE)
+            self.ui.dcaPlaceOrdersButton.setEnabled(True)
+            return
+
         api_key = self.ui.apiKeyLineEdit.text().strip()
         secret_key = self.ui.secretKeyLineEdit.text().strip()
 
@@ -493,8 +521,10 @@ class BinanceAppPyQt(QMainWindow):
             return
 
         self.batch_dca_worker_thread = BatchDcaOrderWorker(
-            self.binance_logic, api_key, secret_key, market_env,
-            dca_symbol, self.last_simulation_dca_levels
+            binance_logic=self.binance_logic, api_key=api_key, secret_key=secret_key,
+            market_env=market_env, symbol_str=dca_symbol,
+            dca_levels_data=self.last_simulation_dca_levels,
+            margin_mode=margin_mode_str, leverage=leverage_int
         )
         self.batch_dca_worker_thread.order_attempt_finished.connect(self._on_dca_tab_order_attempt_finished)
         self.batch_dca_worker_thread.batch_processing_finished.connect(self._on_dca_tab_batch_finished)

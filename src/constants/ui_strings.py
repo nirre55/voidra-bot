@@ -57,6 +57,12 @@ DCA_TAB_ORDER_LEVEL_SUCCESS = "Niveau {level} ({symbol}): Ordre {order_id} plac�
 DCA_TAB_ORDER_LEVEL_ERROR = "Niveau {level} ({symbol}): Erreur lors du placement de l'ordre. Détail: {error}"
 DCA_TAB_BATCH_COMPLETE = "Traitement par lots des ordres DCA terminé."
 DCA_TAB_DATA_CLEARED = "Données de simulation effacées ou modifiées. Veuillez recharger."
+LABEL_MERGE_MODE = "Mode de Marge:"
+MERGE_MODE_ISOLATED = "Isolé"
+MERGE_MODE_CROSS = "Croisé"
+LABEL_LEVERAGE = "Effet de Levier:"
+ERROR_LEVERAGE_INVALID_NUMBER = "L'effet de levier doit être un nombre."
+ERROR_LEVERAGE_OUT_OF_RANGE = "L'effet de levier doit être compris entre 1 et 100 (inclus)."
 
 
 # --- ComboBox Choices ---

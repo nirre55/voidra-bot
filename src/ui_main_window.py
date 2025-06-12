@@ -227,6 +227,32 @@ class Ui_MainWindow(object):
         self.dcaSymbolDisplayLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.dcaOrdersTabLayout.addLayout(self.dcaSymbolDisplayLayout)
 
+        # Merge Mode Layout
+        self.dcaMergeModeLabel = QLabel(ui_strings.LABEL_MERGE_MODE, self.dcaOrdersTab)
+        self.dcaMergeModeComboBox = QComboBox(self.dcaOrdersTab)
+        self.dcaMergeModeComboBox.setObjectName("dcaMergeModeComboBox")
+        self.dcaMergeModeComboBox.addItems([ui_strings.MERGE_MODE_CROSS, ui_strings.MERGE_MODE_ISOLATED])
+        self.dcaMergeModeLayout = QHBoxLayout()
+        self.dcaMergeModeLayout.setObjectName("dcaMergeModeLayout")
+        self.dcaMergeModeLayout.addWidget(self.dcaMergeModeLabel)
+        self.dcaMergeModeLayout.addWidget(self.dcaMergeModeComboBox)
+        # Optional: Add spacer to push combobox to left if it takes too much space
+        # self.dcaMergeModeLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.dcaOrdersTabLayout.addLayout(self.dcaMergeModeLayout)
+
+        # Leverage Layout
+        self.dcaLeverageLabel = QLabel(ui_strings.LABEL_LEVERAGE, self.dcaOrdersTab)
+        self.dcaLeverageLineEdit = QLineEdit(self.dcaOrdersTab)
+        self.dcaLeverageLineEdit.setObjectName("dcaLeverageLineEdit")
+        self.dcaLeverageLineEdit.setPlaceholderText("1-100") # Placeholder text
+        self.dcaLeverageLayout = QHBoxLayout()
+        self.dcaLeverageLayout.setObjectName("dcaLeverageLayout")
+        self.dcaLeverageLayout.addWidget(self.dcaLeverageLabel)
+        self.dcaLeverageLayout.addWidget(self.dcaLeverageLineEdit)
+        # Optional: Add spacer to push lineedit to left
+        # self.dcaLeverageLayout.addSpacerItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
+        self.dcaOrdersTabLayout.addLayout(self.dcaLeverageLayout)
+
         # Load Data Button
         self.dcaLoadDataButton = QPushButton(ui_strings.BUTTON_LOAD_DCA_DATA, self.dcaOrdersTab) # Text from ui_strings
         self.dcaLoadDataButton.setObjectName("dcaLoadDataButton")

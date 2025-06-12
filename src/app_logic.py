@@ -115,7 +115,9 @@ class BinanceLogic:
                     order_type: str, # e.g., 'LIMIT', 'MARKET'
                     side: str,       # e.g., 'BUY', 'SELL'
                     amount: float,
-                    price: float = None): # Price is optional, for MARKET orders
+                    price: float = None, # Price is optional, for MARKET orders
+                    margin_mode: str = None,
+                    leverage: int = None):
         if not api_key or not secret_key:
             raise ApiKeyMissingError(error_messages.PARAM_API_KEYS_REQUIRED)
         if not symbol:
@@ -145,6 +147,47 @@ class BinanceLogic:
             exchange = ccxt.binance(exchange_config)
             if market_environment == MarketEnvironment.FUTURES_TESTNET:
                 exchange.set_sandbox_mode(True)
+
+            # Futures-specific setup: Margin Mode and Leverage
+            if market_environment in [MarketEnvironment.FUTURES_LIVE, MarketEnvironment.FUTURES_TESTNET]:
+                if symbol and margin_mode and leverage is not None: # Ensure all are provided
+                    # Set Margin Mode
+                    ccxt_margin_mode = ""
+                    if margin_mode == ui_strings.MERGE_MODE_ISOLATED: # Using the actual string value from constants
+                        ccxt_margin_mode = "ISOLATED"
+                    elif margin_mode == ui_strings.MERGE_MODE_CROSS: # Using the actual string value from constants
+                        ccxt_margin_mode = "CROSSED"
+
+                    if ccxt_margin_mode:
+                        try:
+                            # print(f"Attempting to set margin mode: {ccxt_margin_mode} for {symbol}") # Debug
+                            exchange.set_margin_mode(ccxt_margin_mode, symbol, params={'adjustForTimeDifference': True})
+                            # print(f"Successfully set margin mode: {ccxt_margin_mode}") # Debug
+                        except ccxt.ExchangeError as e_margin:
+                            # print(f"Error setting margin mode: {e_margin}") # Debug
+                            raise OrderPlacementError(f"Failed to set margin mode to {ccxt_margin_mode} for {symbol}: {str(e_margin)}")
+                        except Exception as e_generic_margin: # Catch any other unexpected error
+                            # print(f"Generic error setting margin mode: {e_generic_margin}") # Debug
+                            raise OrderPlacementError(f"Unexpected error setting margin mode for {symbol}: {str(e_generic_margin)}")
+
+                    # Set Leverage
+                    if leverage > 0: # Basic check, exchange will do more specific validation
+                        try:
+                            # print(f"Attempting to set leverage: {leverage} for {symbol}") # Debug
+                            exchange.set_leverage(leverage, symbol, params={'adjustForTimeDifference': True})
+                            # print(f"Successfully set leverage: {leverage}") # Debug
+                        except ccxt.ExchangeError as e_leverage:
+                            # print(f"Error setting leverage: {e_leverage}") # Debug
+                            raise OrderPlacementError(f"Failed to set leverage to {leverage} for {symbol}: {str(e_leverage)}")
+                        except Exception as e_generic_leverage: # Catch any other unexpected error
+                            # print(f"Generic error setting leverage: {e_generic_leverage}") # Debug
+                            raise OrderPlacementError(f"Unexpected error setting leverage for {symbol}: {str(e_generic_leverage)}")
+                elif market_environment in [MarketEnvironment.FUTURES_LIVE, MarketEnvironment.FUTURES_TESTNET] and (not symbol or not margin_mode or leverage is None):
+                    # This case implies it's futures, but some necessary params for margin/leverage setup are missing.
+                    # Depending on strictness, could raise an error here.
+                    # For now, assume that if they are not passed, we try to place order without setting them,
+                    # which might fail or use account defaults.
+                    pass # Or log a warning.
 
             # Prepare params for create_order
             ccxt_order_type = order_type.lower()

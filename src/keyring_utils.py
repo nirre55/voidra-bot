@@ -87,4 +87,3 @@ def delete_creds(environment_name_value: str) -> bool:
         return False
     except Exception as e:
         print(f"An unexpected error occurred while deleting credentials for {environment_name_value}: {e}")
-        return False

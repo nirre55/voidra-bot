@@ -1,0 +1,38 @@
+# Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment folders
+venv/
+env/
+.venv/
+ENV/
+pip-wheel-metadata/
+parts/
+eggs/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Distribution / packaging
+build/
+dist/
+downloads/
+develop-eggs/
+
+# IDE / Editor specific files
+.idea/
+.vscode/
+*.project
+*.pydevproject
+*.sublime-project
+*.sublime-workspace
+*.tmproj
+*.DS_Store
+Thumbs.db

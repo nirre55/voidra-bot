@@ -3,7 +3,7 @@ import keyring.errors # For NoKeyringError
 from .constants import ui_strings # To get APP_NAME_KEYRING
 
 # SERVICE_NAME will be based on the application's name for keyring storage
-SERVICE_NAME = ui_strings.APP_NAME # Use APP_NAME from ui_strings, assuming it will be defined appropriately for keyring.
+SERVICE_NAME = ui_strings.APP_NAME_KEYRING  # Use APP_NAME_KEYRING from ui_strings for keyring operations
 
 def _get_username_api_key(environment_name_value: str) -> str:
     """Generates the username for storing the API key for a given environment."""
@@ -87,5 +87,3 @@ def delete_creds(environment_name_value: str) -> bool:
         return False
     except Exception as e:
         print(f"An unexpected error occurred while deleting credentials for {environment_name_value}: {e}")
-        return False
-

@@ -3,7 +3,7 @@ import keyring.errors # For NoKeyringError
 from .constants import ui_strings # To get APP_NAME_KEYRING
 
 # SERVICE_NAME will be based on the application's name for keyring storage
-SERVICE_NAME = ui_strings.APP_NAME # Use APP_NAME from ui_strings, assuming it will be defined appropriately for keyring.
+SERVICE_NAME = ui_strings.APP_NAME_KEYRING  # Use APP_NAME_KEYRING from ui_strings for keyring operations
 
 def _get_username_api_key(environment_name_value: str) -> str:
     """Generates the username for storing the API key for a given environment."""
@@ -95,13 +95,13 @@ if __name__ == '__main__':
     # It uses a fixed service name for testing to avoid conflicts and dependency on ui_strings here.
     _TEST_SERVICE_NAME_FOR_MAIN = "BinanceMultiApp_KeyringUtils_DirectTest"
 
-    # Temporarily patch SERVICE_NAME for this test block if ui_strings.APP_NAME is not yet defined
+    # Temporarily patch SERVICE_NAME for this test block if ui_strings.APP_NAME_KEYRING is not yet defined
     # This is a bit of a hack for isolated testing. In the actual app, SERVICE_NAME will be set from ui_strings.
     _original_service_name = SERVICE_NAME
     try:
         # Try to use the imported SERVICE_NAME first
-        SERVICE_NAME = ui_strings.APP_NAME
-    except AttributeError: # If ui_strings.APP_NAME is not yet defined
+        SERVICE_NAME = ui_strings.APP_NAME_KEYRING
+    except AttributeError:  # If ui_strings.APP_NAME_KEYRING is not yet defined
         SERVICE_NAME = _TEST_SERVICE_NAME_FOR_MAIN
 
     print(f"Using service name for testing: {SERVICE_NAME}")
@@ -134,7 +134,7 @@ if __name__ == '__main__':
 
     # Restore original SERVICE_NAME if it was changed
     SERVICE_NAME = _original_service_name
-    print(f"\nRestored service name to: {SERVICE_NAME if SERVICE_NAME else 'ui_strings.APP_NAME (pending definition)'}")
+    print(f"\nRestored service name to: {SERVICE_NAME if SERVICE_NAME else 'ui_strings.APP_NAME_KEYRING (pending definition)'}")
     print("\nNote: If 'Keyring backend not found' messages appear, keyring is not configured on this system.")
     print("You might need to install a backend like 'keyrings.alt' (e.g., `pip install keyrings.alt`)")
     print("or configure one appropriate for your OS (e.g., KWallet, macOS Keychain, Windows Credential Manager).")

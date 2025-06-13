@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QThread, pyqtSignal
-from ..app_logic import BinanceLogic, MarketEnvironment, ApiKeyMissingError, CustomNetworkError, CustomExchangeError, AppLogicError
+from ..app_logic import BinanceLogic, ApiKeyMissingError, CustomNetworkError, CustomExchangeError, AppLogicError
+from ..models.market_environment import MarketEnvironment
 from ..constants import error_messages
 
 class BalanceWorker(QThread):
@@ -15,12 +16,24 @@ class BalanceWorker(QThread):
         self.api_key = api_key
         self.secret_key = secret_key
         self.market_environment = market_environment
+        self._is_running = True
+
+    def stop(self):
+        """Arrête le thread."""
+        self._is_running = False
+        self.wait()
 
     def run(self):
+        if not self._is_running:
+            return
+
         try:
             balance = self.binance_logic.get_balance(self.api_key, self.secret_key, self.market_environment)
-            self.success.emit(balance)
+            if self._is_running:
+                self.success.emit(balance)
         except (ApiKeyMissingError, CustomNetworkError, CustomExchangeError, AppLogicError) as e:
-            self.error.emit(str(e))
+            if self._is_running:
+                self.error.emit(str(e))
         except Exception as e:
-            self.error.emit(f"{error_messages.ERROR_UNEXPECTED}: {str(e)}") 
+            if self._is_running:
+                self.error.emit(f"{error_messages.ERROR_UNEXPECTED}: {str(e)}") 

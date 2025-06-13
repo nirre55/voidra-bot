@@ -1,9 +1,10 @@
 from PyQt5.QtCore import QThread, pyqtSignal
 from typing import Optional
 from ..app_logic import (
-    BinanceLogic, MarketEnvironment, ApiKeyMissingError, InvalidOrderParamsError,
+    BinanceLogic, ApiKeyMissingError, InvalidOrderParamsError,
     InsufficientFundsError, OrderPlacementError, CustomNetworkError, AppLogicError
 )
+from ..models.market_environment import MarketEnvironment
 from ..constants import error_messages
 
 class OrderPlacementWorker(QThread):
@@ -23,16 +24,28 @@ class OrderPlacementWorker(QThread):
         self.side = side
         self.amount = amount
         self.price = price
+        self._is_running = True
+
+    def stop(self):
+        """Arrête le thread."""
+        self._is_running = False
+        self.wait()
 
     def run(self):
+        if not self._is_running:
+            return
+
         try:
             order_response = self.binance_logic.place_order(
                 self.api_key, self.secret_key, self.market_environment,
                 self.symbol, self.order_type, self.side, self.amount, self.price
             )
-            self.success.emit(order_response)
+            if self._is_running:
+                self.success.emit(order_response)
         except (ApiKeyMissingError, InvalidOrderParamsError, InsufficientFundsError,
                 OrderPlacementError, CustomNetworkError, AppLogicError) as e:
-            self.error.emit(str(e))
+            if self._is_running:
+                self.error.emit(str(e))
         except Exception as e:
-            self.error.emit(f"{error_messages.ERROR_UNEXPECTED}: {str(e)}") 
+            if self._is_running:
+                self.error.emit(f"{error_messages.ERROR_UNEXPECTED}: {str(e)}") 

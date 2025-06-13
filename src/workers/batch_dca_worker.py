@@ -75,15 +75,7 @@ class BatchDcaOrderWorker(QThread):
                 except Exception as e:
                     self._cancel_all_orders()
                     error_detail = str(e)
-                    if "leverage" in error_detail.lower():
-                        error_msg = f"Erreur lors du placement de l'ordre {i+1}: Problème avec le levier ({self.leverage}x). Détail: {error_detail}"
-                    elif "margin" in error_detail.lower():
-                        error_msg = f"Erreur lors du placement de l'ordre {i+1}: Problème avec le mode de marge ({self.margin_mode}). Détail: {error_detail}"
-                    elif "insufficient" in error_detail.lower():
-                        error_msg = f"Erreur lors du placement de l'ordre {i+1}: Fonds insuffisants. Détail: {error_detail}"
-                    else:
-                        error_msg = f"Erreur lors du placement de l'ordre {i+1}. Détail: {error_detail}"
-                    
+                    error_msg = f"Erreur lors du placement de l'ordre {i+1}. Détail: {error_detail}"
                     error_msg += "\nTous les ordres ont été annulés. Veuillez vérifier les paramètres et réessayer."
                     self.batch_error.emit(error_msg)
                     return

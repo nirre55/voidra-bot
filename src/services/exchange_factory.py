@@ -1,6 +1,6 @@
 import ccxt
 from typing import Optional
-from ..app_logic import MarketEnvironment
+from ..models.market_environment import MarketEnvironment
 
 class ExchangeFactory:
     @staticmethod
@@ -16,17 +16,15 @@ class ExchangeFactory:
         Returns:
             Une instance configurée de l'exchange Binance
         """
-        exchange_config = {
-            'apiKey': api_key,
-            'secret': secret_key,
-            'options': {'adjustForTimeDifference': True}
-        }
+        exchange = ccxt.binance()
+        exchange.apiKey = api_key
+        exchange.secret = secret_key
+        exchange.options = getattr(exchange, 'options', {})
+        exchange.options['adjustForTimeDifference'] = True
 
         # Configuration spécifique pour les futures
         if market_env in [MarketEnvironment.FUTURES_LIVE, MarketEnvironment.FUTURES_TESTNET]:
-            exchange_config['options']['defaultType'] = 'future'
-
-        exchange = ccxt.binance(**exchange_config)
+            exchange.options['defaultType'] = 'future'
 
         # Activation du mode testnet si nécessaire
         if market_env == MarketEnvironment.FUTURES_TESTNET:

@@ -36,3 +36,5 @@ develop-eggs/
 *.tmproj
 *.DS_Store
 Thumbs.db
+
+.cursor/
